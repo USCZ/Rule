@@ -1,2 +1,2 @@
 # Rule
-selfuse
+自用
