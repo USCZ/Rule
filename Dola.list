@@ -1,0 +1,10 @@
+ # === Dola / Cici AI 核心服务（必须放行）===
+host-suffix, dola.com, proxy
+host-suffix, ciciai.com, proxy
+host-suffix, volcvideo.com, proxy
+host-suffix, ibyteimg.com, proxy
+
+# === 追踪/分析（建议 REJECT）===
+host-suffix, appsflyersdk.com, REJECT
+host, app-analytics-services.com, REJECT
+host, log-report.volcvideos.com, REJECT
