@@ -1,5 +1,5 @@
 # Quantumult X - HK Finance Apps DIRECT
-# 众安银行、天星银行、汇立银行、致富证券、盈透证券、嘉信理财、蚂蚁银行、FSM、BBAE、汇丰香港、投资全速易等
+# 香港银行、虚拟银行、券商、行情与金融登录服务：ZA/Airstar/WeLab/Mox/livi/PAOb/Fusion、致富、IBKR、Schwab、FSM、富途、老虎、长桥、Webull、SoFi、耀才、辉立、汇丰/中银/恒生/渣打/花旗等
 # 用法：[filter_remote] 中设置 force-policy=DIRECT
 
 # --- ZA Bank / ZA International / ZA 系 ---
@@ -27,6 +27,25 @@ HOST-SUFFIX,welabgroup.com.hk,DIRECT
 HOST-SUFFIX,welab-bank.com,DIRECT
 HOST-SUFFIX,welab-bank.com.hk,DIRECT
 HOST-KEYWORD,welab,DIRECT
+
+# --- Other HK Virtual Banks / 其他香港虚拟银行 ---
+HOST-SUFFIX,mox.com,DIRECT
+HOST-SUFFIX,mox.com.hk,DIRECT
+HOST-SUFFIX,moxbank.com,DIRECT
+HOST-SUFFIX,moxbank.com.hk,DIRECT
+HOST-SUFFIX,livi.bank,DIRECT
+HOST-SUFFIX,livi.com.hk,DIRECT
+HOST-SUFFIX,livibank.com,DIRECT
+HOST-SUFFIX,livibank.com.hk,DIRECT
+HOST-SUFFIX,paob.com.hk,DIRECT
+HOST-SUFFIX,pinganoneconnectbank.com,DIRECT
+HOST-SUFFIX,fusionbank.com,DIRECT
+HOST-SUFFIX,fusionbank.com.hk,DIRECT
+HOST-SUFFIX,fusionbanking.com,DIRECT
+HOST-KEYWORD,moxbank,DIRECT
+HOST-KEYWORD,livi,DIRECT
+HOST-KEYWORD,paob,DIRECT
+HOST-KEYWORD,fusionbank,DIRECT
 
 # --- Chief Securities / Chief Group / 致富证券 ---
 # Official websites / apps / account opening / deposit / quote / trading platforms
@@ -123,6 +142,48 @@ HOST-SUFFIX,bbae.com.hk,DIRECT
 HOST-SUFFIX,bbae.net,DIRECT
 HOST-KEYWORD,bbae,DIRECT
 
+# --- HK / Global Brokers & Market Data / 香港及环球券商与行情 ---
+HOST-SUFFIX,futuhk.com,DIRECT
+HOST-SUFFIX,futunn.com,DIRECT
+HOST-SUFFIX,futunn.com.hk,DIRECT
+HOST-SUFFIX,moomoo.com,DIRECT
+HOST-SUFFIX,moomoo.com.hk,DIRECT
+HOST-SUFFIX,itiger.com,DIRECT
+HOST-SUFFIX,itigerup.com,DIRECT
+HOST-SUFFIX,tigerbrokers.com,DIRECT
+HOST-SUFFIX,tigerbrokers.com.hk,DIRECT
+HOST-SUFFIX,longbridge.com,DIRECT
+HOST-SUFFIX,longportapp.com,DIRECT
+HOST-SUFFIX,webull.com,DIRECT
+HOST-SUFFIX,webull.hk,DIRECT
+HOST-SUFFIX,webull.com.hk,DIRECT
+HOST-SUFFIX,sofi.hk,DIRECT
+HOST-SUFFIX,sofi.com.hk,DIRECT
+HOST-SUFFIX,sofi.com,DIRECT
+HOST-SUFFIX,brightsmart.com.hk,DIRECT
+HOST-SUFFIX,bsgroup.com.hk,DIRECT
+HOST-SUFFIX,phillip.com.hk,DIRECT
+HOST-SUFFIX,poems.com.hk,DIRECT
+HOST-SUFFIX,valuable.com.hk,DIRECT
+HOST-SUFFIX,vcgroup.com.hk,DIRECT
+HOST-SUFFIX,usmart.hk,DIRECT
+HOST-SUFFIX,usmartsecurities.com,DIRECT
+HOST-SUFFIX,monexboom.com,DIRECT
+HOST-SUFFIX,boom.com.hk,DIRECT
+HOST-SUFFIX,fubonsec.com.hk,DIRECT
+HOST-KEYWORD,futunn,DIRECT
+HOST-KEYWORD,moomoo,DIRECT
+HOST-KEYWORD,itiger,DIRECT
+HOST-KEYWORD,tigerbrokers,DIRECT
+HOST-KEYWORD,longbridge,DIRECT
+HOST-KEYWORD,longport,DIRECT
+HOST-KEYWORD,webull,DIRECT
+HOST-KEYWORD,brightsmart,DIRECT
+HOST-KEYWORD,phillip,DIRECT
+HOST-KEYWORD,poems,DIRECT
+HOST-KEYWORD,usmart,DIRECT
+HOST-KEYWORD,monexboom,DIRECT
+
 # --- HSBC Hong Kong / 汇丰香港 ---
 HOST-SUFFIX,hsbc.com.hk,DIRECT
 HOST-SUFFIX,hsbc.com,DIRECT
@@ -154,18 +215,45 @@ HOST-KEYWORD,aastocks,DIRECT
 HOST-KEYWORD,etnet,DIRECT
 HOST-KEYWORD,hkex,DIRECT
 
-# --- 通用金融登录 / 风控 / CDN 辅助域名（谨慎：仅香港金融常见服务）---
+# --- HK Banks / Payment / Financial Login / 香港银行、支付与金融登录 ---
 HOST-SUFFIX,bochk.com,DIRECT
 HOST-SUFFIX,bochk.com.hk,DIRECT
-HOST-SUFFIX,hangseng.com.hk,DIRECT
+HOST-SUFFIX,bochk.com.mo,DIRECT
 HOST-SUFFIX,jpmorgan.com,DIRECT
 HOST-SUFFIX,jpmorganchase.com,DIRECT
 HOST-SUFFIX,citibank.com.hk,DIRECT
 HOST-SUFFIX,citi.com.hk,DIRECT
+HOST-SUFFIX,citi.com,DIRECT
 HOST-SUFFIX,sc.com.hk,DIRECT
 HOST-SUFFIX,standardchartered.com.hk,DIRECT
+HOST-SUFFIX,standardchartered.com,DIRECT
 HOST-SUFFIX,dbs.com.hk,DIRECT
 HOST-SUFFIX,dbs.com,DIRECT
+HOST-SUFFIX,dbs.com.sg,DIRECT
+HOST-SUFFIX,bankcomm.com.hk,DIRECT
+HOST-SUFFIX,hk.bankcomm.com,DIRECT
+HOST-SUFFIX,dahsing.com,DIRECT
+HOST-SUFFIX,dahsing.com.hk,DIRECT
+HOST-SUFFIX,bankofeastasia.com,DIRECT
+HOST-SUFFIX,hkbea.com,DIRECT
+HOST-SUFFIX,cncbinternational.com,DIRECT
+HOST-SUFFIX,ccb.com.hk,DIRECT
+HOST-SUFFIX,asia.ccb.com,DIRECT
+HOST-SUFFIX,cmbwinglungbank.com,DIRECT
+HOST-SUFFIX,winglungbank.com,DIRECT
+HOST-SUFFIX,publicbank.com.hk,DIRECT
+HOST-SUFFIX,ocbc.com.hk,DIRECT
+HOST-SUFFIX,ocbc.com,DIRECT
+HOST-SUFFIX,aeon.com.hk,DIRECT
+HOST-SUFFIX,octopus.com.hk,DIRECT
+HOST-SUFFIX,octopus.com,DIRECT
+HOST-KEYWORD,bochk,DIRECT
+HOST-KEYWORD,bankcomm,DIRECT
+HOST-KEYWORD,dahsing,DIRECT
+HOST-KEYWORD,hkbea,DIRECT
+HOST-KEYWORD,cncbinternational,DIRECT
+HOST-KEYWORD,cmbwinglung,DIRECT
+HOST-KEYWORD,octopus,DIRECT
 
 # --- 常见 ASN / IP 辅助：香港交易所、IBKR、Schwab 等公网段可能变化，优先域名规则 ---
 # 如遇 Quantumult X 版本不支持 IP-ASN，可删除以下行
