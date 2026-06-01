@@ -28,14 +28,45 @@ HOST-SUFFIX,welab-bank.com,DIRECT
 HOST-SUFFIX,welab-bank.com.hk,DIRECT
 HOST-KEYWORD,welab,DIRECT
 
-# --- Chief Securities / 致富证券 ---
+# --- Chief Securities / Chief Group / 致富证券 ---
+# Official websites / apps / account opening / deposit / quote / trading platforms
 HOST-SUFFIX,chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,chiefgroup.com,DIRECT
+HOST-SUFFIX,chieftrade.com,DIRECT
 HOST-SUFFIX,chiefsecurities.com.hk,DIRECT
 HOST-SUFFIX,chief.com.hk,DIRECT
 HOST-SUFFIX,chief-sec.com.hk,DIRECT
+HOST-SUFFIX,api.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,api2.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,ca.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,cas.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,cdn.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,chief-deposit.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,common-h5.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,df.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,ipo-h5.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,quote.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,service.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,speedweb.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,toptrader.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,toptrader1.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,toptrader2.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,toptrader3.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,toptrader4.chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,chief-website.oss-cn-hongkong.aliyuncs.com,DIRECT
+HOST-SUFFIX,chiefgroup.udeskglobal.com,DIRECT
+# Megahub market data / quote services used by Chief Trader / 致富通
+HOST-SUFFIX,megahubhk.com,DIRECT
+HOST-SUFFIX,charts.megahubhk.com,DIRECT
+HOST-SUFFIX,shield.megahubhk.com,DIRECT
+HOST-SUFFIX,xml.megahubhk.com,DIRECT
+HOST-SUFFIX,mtstreamer.megahubhk.com,DIRECT
+HOST-SUFFIX,mtprsstreamer.megahubhk.com,DIRECT
 HOST-KEYWORD,chiefgroup,DIRECT
+HOST-KEYWORD,chieftrade,DIRECT
 HOST-KEYWORD,chiefsecurities,DIRECT
 HOST-KEYWORD,chief-sec,DIRECT
+HOST-KEYWORD,megahubhk,DIRECT
 
 # --- Interactive Brokers / IBKR / 盈透证券 ---
 HOST-SUFFIX,interactivebrokers.com,DIRECT
