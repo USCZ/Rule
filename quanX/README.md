@@ -1,6 +1,6 @@
 # Quantumult X 规则集自用规则
 
-这个目录用于存放 Quantumult X 自用分流规则。当前包含 Apple Push、Dola / Cici AI、香港银行券商直连三类规则。后续新增规则也默认按自用场景维护。
+这个目录用于存放 Quantumult X 自用分流规则。当前包含 Apple Push、Dola / Cici AI、香港金融服务混合分流三类规则。后续新增规则也默认按自用场景维护。
 
 ## 规则列表
 
@@ -55,20 +55,20 @@ https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Dola.list, tag=Dola Cici 
 
 ---
 
-### 3. HK_Finance_Direct.list
+### 3. HK_Finance.list
 
-用途：香港银行、券商、金融行情服务直连规则。
+用途：香港银行、券商、金融行情服务混合分流规则。银行、支付、监管公开站点按风控保守直连；富途/富途牛牛/Futubull/Moomoo 以及其他离岸券商、行情、交易接口按大陆访问稳定性走代理。
 
 Raw 地址：
 
 ```text
-https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance_Direct.list
+https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list
 ```
 
 Quantumult X 示例：
 
 ```ini
-https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance_Direct.list, tag=港股银行券商直连, force-policy=DIRECT, update-interval=86400, opt-parser=false, enabled=true
+https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list, tag=香港金融混合分流, update-interval=86400, opt-parser=false, enabled=true
 ```
 
 覆盖 App / 服务：
@@ -82,15 +82,19 @@ https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance_Direct.list, t
 - 蚂蚁银行 Ant Bank HK
 - FSMOne / Fundsupermart
 - BBAE
+- 富途 / 富途牛牛 / Futubull / Moomoo
 - 汇丰香港 HSBC HK
 - 投资全速易 / i-Invest / AAStocks 相关服务
 - 其他香港金融常见辅助域名
 
 说明：
 
-- 规则内策略统一为 `DIRECT`。
-- 建议放在代理规则之前，避免银行、券商 App 因代理 IP、风控、地区判断导致登录或交易异常。
-- 文件中包含少量 `IP-ASN` 辅助规则；如果你的 Quantumult X 版本不支持，可删除对应行。
+- 规则内已经混合写入 `DIRECT` 和 `proxy`，不要在 `[filter_remote]` 中添加 `force-policy`，否则会覆盖文件内策略。
+- 银行/支付/监管公开站点使用 `DIRECT`，包括虚拟银行、汇丰/恒生/中银/渣打/花旗/星展/八达通等。
+- 离岸券商、行情推送、交易执行和报价卡使用 `proxy`，包括富途/Moomoo、老虎、长桥、Webull、IBKR、Schwab、致富、FSMOne、AAStocks、ETNet 等。
+- 富途相关主域包括 `futunn.com`、`moomoo.com`、`futuholdings.com`、`futuhk.com`、`futufin.com`；其中 `futunn.com` 后缀覆盖 `qtcard`、`openapi`、`api`、`api5`、`trade`、`support`、`download` 以及 WebSocket 子域。
+- 建议使用低延迟香港或新加坡节点，尤其是行情和交易场景。
+- 文件不再包含宽泛的云厂商 `IP-ASN` 规则，避免误伤非金融流量。
 
 ## 推荐配置示例
 
@@ -100,12 +104,12 @@ https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance_Direct.list, t
 [filter_remote]
 https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Apple_Push.list, tag=Apple Push, force-policy=proxy, update-interval=86400, opt-parser=false, enabled=true
 https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Dola.list, tag=Dola Cici AI, update-interval=86400, opt-parser=false, enabled=true
-https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance_Direct.list, tag=港股银行券商直连, force-policy=DIRECT, update-interval=86400, opt-parser=false, enabled=true
+https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list, tag=香港金融混合分流, update-interval=86400, opt-parser=false, enabled=true
 ```
 
 ## 使用建议
 
 - `Apple_Push.list`：建议放在较前位置，并使用 `force-policy=proxy`，让 Apple Push 默认走代理策略，用于改善 Telegram、X / Twitter 等 App 的推送问题。
 - `Dola.list`：规则内已包含 `proxy` 和 `REJECT`，不要使用 `force-policy` 覆盖；其中 `proxy` 建议对应新加坡节点或新加坡策略组。
-- `HK_Finance_Direct.list`：建议放在银行/金融相关规则优先级较高的位置，并强制 `DIRECT`。
+- `HK_Finance.list`：建议放在银行/金融相关规则优先级较高的位置；规则内已有 `DIRECT` / `proxy` 混合策略，不要使用 `force-policy` 覆盖。
 - 如遇 App 域名变更，可通过 Quantumult X 日志或 MitM/抓包补充规则。
