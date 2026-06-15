@@ -1,10 +1,48 @@
- # === Dola / Cici AI 核心服务（必须放行）===
-host-suffix, dola.com, proxy
-host-suffix, ciciai.com, proxy
-host-suffix, volcvideo.com, proxy
-host-suffix, ibyteimg.com, proxy
+# Quantumult X - Dola / Cici AI Singapore Routing
+# Dola is the overseas Cici AI service. The web app and mobile app currently
+# expose SG-region ByteDance/Cici endpoints, so this ruleset should use a
+# Singapore node or a Singapore-only policy group.
+# Do not use force-policy on this file: proxy and REJECT are intentionally mixed.
 
-# === 追踪/分析（建议 REJECT）===
-host-suffix, appsflyersdk.com, REJECT
-host, app-analytics-services.com, REJECT
-host, log-report.volcvideos.com, REJECT
+# --- Dola / Cici core ---
+HOST-SUFFIX,dola.com,proxy
+HOST-SUFFIX,cici.com,proxy
+HOST-SUFFIX,ciciai.com,proxy
+HOST-KEYWORD,dola,proxy
+HOST-KEYWORD,ciciai,proxy
+
+# --- Dola / Cici SG web, API, auth, CDN and signed media ---
+HOST-SUFFIX,ciciaicdn.com,proxy
+HOST-SUFFIX,ibyteimg.com,proxy
+HOST-SUFFIX,ibytedapm.com,proxy
+HOST-SUFFIX,bytedapm.com,proxy
+HOST-SUFFIX,byteintlapi.com,proxy
+HOST-SUFFIX,byteintl.net,proxy
+HOST-SUFFIX,byteoversea.com,proxy
+HOST-SUFFIX,yhgfb-static.com,proxy
+HOST-SUFFIX,volcvideo.com,proxy
+HOST-SUFFIX,volcvideos.com,proxy
+HOST-SUFFIX,doubao.com,proxy
+
+# Observed Dola/Cici SG hosts from current web entrypoints.
+HOST,mcs-sg.ciciai.com,proxy
+HOST,opt-i18n.ciciai.com,proxy
+HOST,p16-flow-sign-sg.ciciai.com,proxy
+HOST,vmweb-sg.ciciai.com,proxy
+HOST,vcs-sg.byteoversea.com,proxy
+HOST,sgali-mcs.byteoversea.com,proxy
+HOST,starling-oversea.byteoversea.com,proxy
+HOST,mon-sg.byteintlapi.com,proxy
+HOST,sf16-short-sg.bytedapm.com,proxy
+HOST,sf3-short.ibytedapm.com,proxy
+HOST,p16-flow-sign-sg.ibyteimg.com,proxy
+HOST,lf-flow-web-cdn.doubao.com,proxy
+HOST,lf-rc1.yhgfb-static.com,proxy
+HOST,sf-flow-web-cdn.ciciai.com,proxy
+HOST,sf-flow-web-cdn.ciciaicdn.com,proxy
+HOST,sf-sf-flow-web-cdn-nontt.ciciaicdn.com,proxy
+
+# --- Tracking / attribution ---
+HOST-SUFFIX,appsflyersdk.com,REJECT
+HOST,app-analytics-services.com,REJECT
+HOST,log-report.volcvideos.com,REJECT
