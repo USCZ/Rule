@@ -123,19 +123,82 @@ https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Dola.list
 
 ## 🚀 快速订阅 / 一键导入
 
-| 规则 | Raw 地址 | Quantumult X 一键导入 |
-| --- | --- | --- |
-| 港美股券商 + 香港金融 | [HK_Finance.list](https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list) | [导入 QX](https://quantumult.app/x/open-app/add-resource?remote-resource=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FHK_Finance.list) |
-| Apple Push | [Apple_Push.list](https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Apple_Push.list) | [导入 QX](https://quantumult.app/x/open-app/add-resource?remote-resource=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FApple_Push.list) |
-| Dola / Cici AI | [Dola.list](https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Dola.list) | [导入 QX](https://quantumult.app/x/open-app/add-resource?remote-resource=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FDola.list) |
+> 「单个规则列表」的一键导入仅 **Quantumult X** 与 **Loon** 原生支持。
+> **Shadowrocket / Clash** 的一键导入只针对完整配置 / 模块 / 订阅，**不支持裸 `.list` 规则**；
+> 请在配置中用 `RULE-SET` / `rule-providers` 引用（见 [各客户端配置](#-各客户端配置)）。
 
-如果不唤起 Quantumult X，可把下面的 URL Scheme 复制到 Safari 打开：
+**Raw 地址**
+
+| 规则 | Raw 地址 |
+| --- | --- |
+| 港美股券商 + 香港金融 | [HK_Finance.list](https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list) |
+| Apple Push | [Apple_Push.list](https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Apple_Push.list) |
+| Dola / Cici AI | [Dola.list](https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Dola.list) |
+
+### Quantumult X（原生一键 → `[filter_remote]`）
+
+| 规则 | 一键导入 |
+| --- | --- |
+| 港美股券商 + 香港金融 | [导入 Quantumult X](https://quantumult.app/x/open-app/add-resource?remote-resource=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FHK_Finance.list) |
+| Apple Push | [导入 Quantumult X](https://quantumult.app/x/open-app/add-resource?remote-resource=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FApple_Push.list) |
+| Dola / Cici AI | [导入 Quantumult X](https://quantumult.app/x/open-app/add-resource?remote-resource=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FDola.list) |
+
+网页不跳转时，把下面的 URL Scheme 复制到 Safari：
 
 ```text
 quantumult-x:///add-resource?remote-resource=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FHK_Finance.list
 quantumult-x:///add-resource?remote-resource=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FApple_Push.list
 quantumult-x:///add-resource?remote-resource=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FDola.list
 ```
+
+### Loon（原生一键 → `[Remote Rule]`）
+
+| 规则 | 一键导入 |
+| --- | --- |
+| 港美股券商 + 香港金融 | [导入 Loon](https://www.nsloon.com/openloon/import?rules=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FHK_Finance.list) |
+| Apple Push | [导入 Loon](https://www.nsloon.com/openloon/import?rules=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FApple_Push.list) |
+| Dola / Cici AI | [导入 Loon](https://www.nsloon.com/openloon/import?rules=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FDola.list) |
+
+网页不跳转时，把下面的 URL Scheme 复制到 Safari：
+
+```text
+loon://import?rules=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FHK_Finance.list
+loon://import?rules=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FApple_Push.list
+loon://import?rules=https%3A%2F%2Fraw.githubusercontent.com%2FUSCZ%2FRule%2Fmain%2FquanX%2FDola.list
+```
+
+> Loon 采用 Surge 系语法：本规则的 `HOST-SUFFIX` / `HOST-KEYWORD` 新版 Loon 多可识别，旧版需改 `DOMAIN-SUFFIX` / `DOMAIN-KEYWORD`；`Apple_Push.list` 里的 `IP6-CIDR` 在 Loon 写作 `IP-CIDR6`。
+
+### Shadowrocket（无裸列表一键 → `[Rule]` 内用 `RULE-SET` 引用）
+
+小火箭一键只支持模块 `shadowrocket://install?module=` / 配置 `shadowrocket://config/add/` / 订阅，**不支持直接导入规则列表**。小火箭兼容 `HOST-*` 语法，在配置 `[Rule]` 引用即可：
+
+```ini
+[Rule]
+RULE-SET,https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Apple_Push.list,proxy
+# 注意：RULE-SET 第三列会给整份列表套统一策略；
+# HK_Finance.list / Dola.list 含 DIRECT / REJECT 混合策略，套单一策略会被覆盖——
+# 请把这两份的规则展开到 [Rule] 并保留每行末尾的 proxy / DIRECT / REJECT。
+```
+
+### Clash / Mihomo / Stash（无裸列表一键 → `rule-providers`）
+
+Clash 的一键 `clash://install-config?url=` 只针对完整 YAML 配置。规则列表需作为 `rule-providers` 写进配置，并把 `HOST-*` 转为 `DOMAIN-*`（`behavior: classical` 的 provider 同样是单一 outbound，混合策略文件需按策略拆分）：
+
+```yaml
+rule-providers:
+  hk_finance:
+    type: http
+    behavior: classical
+    url: https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list
+    path: ./ruleset/hk_finance.list
+    interval: 86400
+rules:
+  - RULE-SET,hk_finance,🚀 Proxy
+```
+
+> Stash 可用 `https://link.stash.ws/install-override/<path>`（`.stoverride`）实现一键，但需先把规则封装成 override 文件。
+> 如需我额外生成 **Shadowrocket 模块 / Stash override / Clash 配置** 来实现这两类客户端的真正一键，请告诉我。
 
 ---
 
