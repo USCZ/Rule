@@ -1,28 +1,36 @@
-# Quantumult X - Apple Push Notification Service / APNs
-# Purpose: route APNs through proxy to improve notification delivery for
-# overseas apps such as Telegram and X / Twitter on China-region networks.
-# Apple documents APNs device connections on TCP 5223, with TCP 443 fallback,
-# and recommends allowing 17.0.0.0/8 or the narrower ranges below.
+# Quantumult X - Apple Push / APNs 推送规则（走代理）
+# 背景：2026 年 5 月起，部分中国大陆网络环境下，iOS 对部分海外 App
+#       （Telegram、X/Twitter 等）的 APNs 推送被屏蔽 / 异常；
+#       将 APNs（push.apple.com 及其 IP 段）走海外代理后即可恢复推送。
+# 用法：本文件已按域名 / IP 写入 proxy，请勿在 [filter_remote] 再设置 force-policy。
+# 注意事项：
+#   1) 切勿对 push.apple.com 启用 HTTPS 解密(MITM)，否则推送 TLS 握手会失败。
+#   2) 蜂窝数据下需在代理工具中开启“包含 APNS / 全部网络”，否则会间歇性失效；
+#      规则生效后建议开关一次飞行模式，让 APNs 长连接重新建立。
+#   3) APNs 走代理后，一旦节点故障会导致所有推送（含国内）异常；
+#      建议将 proxy 指向“稳定节点 + DIRECT 兜底”的策略组。
 
-# --- APNs domains ---
+# --- APNs 推送域名（走代理）---
 HOST-SUFFIX,push.apple.com,proxy
-HOST-SUFFIX,push-apple.com.akadns.net,proxy
-HOST-KEYWORD,apple.com.edgekey.net,proxy
+# Akamai 上的 APNs 专用 CNAME（精确匹配，避免波及其他 Akamai 服务）
+HOST,push-apple.com.akadns.net,proxy
+HOST,courier-push-apple.com.akadns.net,proxy
+HOST,init-p01st-lb.push-apple.com.akadns.net,proxy
+HOST,init-p01md-lb.push-apple.com.akadns.net,proxy
+HOST,init-s01st-lb.push-apple.com.akadns.net,proxy
+# 如启用后推送仍异常，可解开下面两行（较激进，会波及其他 Akamai / Edgekey 托管服务）
+# HOST-SUFFIX,akadns.net,proxy
+# HOST-KEYWORD,apple.com.edgekey.net,proxy
 
-# Provider API endpoints are included for completeness. They are mainly used by
-# app servers, but matching them is harmless in client-side proxy profiles.
-HOST,api.push.apple.com,proxy
-HOST,api.sandbox.push.apple.com,proxy
-
-# --- APNs IPv4 ranges published by Apple ---
+# --- APNs IPv4 网段（走代理，no-resolve）---
 IP-CIDR,17.249.0.0/16,proxy,no-resolve
 IP-CIDR,17.252.0.0/16,proxy,no-resolve
 IP-CIDR,17.57.144.0/22,proxy,no-resolve
 IP-CIDR,17.188.128.0/18,proxy,no-resolve
 IP-CIDR,17.188.20.0/23,proxy,no-resolve
 
-# --- APNs IPv6 ranges published by Apple ---
-IP-CIDR6,2620:149:a44::/48,proxy,no-resolve
-IP-CIDR6,2403:300:a42::/48,proxy,no-resolve
-IP-CIDR6,2403:300:a51::/48,proxy,no-resolve
-IP-CIDR6,2a01:b740:a42::/48,proxy,no-resolve
+# --- APNs IPv6 网段（走代理，no-resolve）---
+IP6-CIDR,2620:149:a44::/48,proxy,no-resolve
+IP6-CIDR,2403:300:a42::/48,proxy,no-resolve
+IP6-CIDR,2403:300:a51::/48,proxy,no-resolve
+IP6-CIDR,2a01:b740:a42::/48,proxy,no-resolve
