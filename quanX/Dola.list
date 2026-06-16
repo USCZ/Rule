@@ -1,48 +1,28 @@
-# Quantumult X - Dola / Cici AI Singapore Routing
-# Dola is the overseas Cici AI service. The web app and mobile app currently
-# expose SG-region ByteDance/Cici endpoints, so this ruleset should use a
-# Singapore node or a Singapore-only policy group.
-# Do not use force-policy on this file: proxy and REJECT are intentionally mixed.
+# Quantumult X - Dola / Cici (豆包海外版) 分流规则
+# 应用：Dola（原 Cici，包名 com.larus.wolf，开发商 SPRING (SG) PTE. LTD. / 字节跳动海外 AI 助手）
+# 背景：该应用区域锁定，仅限海外使用；中国大陆直连会被区域限制拦截，必须走海外节点。
+#       开发主体在新加坡，后端跑在字节火山引擎 + OpenAI GPT / Google Gemini，
+#       建议在 proxy 策略组内优先选择【新加坡】节点。
+# 用法：本文件已按域名写入 proxy / REJECT，请勿在 [filter_remote] 再设置 force-policy。
 
-# --- Dola / Cici core ---
+# --- Dola / Cici 核心服务（走代理，建议新加坡节点）---
 HOST-SUFFIX,dola.com,proxy
-HOST-SUFFIX,cici.com,proxy
 HOST-SUFFIX,ciciai.com,proxy
-HOST-KEYWORD,dola,proxy
-HOST-KEYWORD,ciciai,proxy
 
-# --- Dola / Cici SG web, API, auth, CDN and signed media ---
-HOST-SUFFIX,ciciaicdn.com,proxy
-HOST-SUFFIX,ibyteimg.com,proxy
-HOST-SUFFIX,ibytedapm.com,proxy
-HOST-SUFFIX,bytedapm.com,proxy
-HOST-SUFFIX,byteintlapi.com,proxy
-HOST-SUFFIX,byteintl.net,proxy
+# --- 字节跳动海外基础设施 / 配置 / 存储 / CDN（仅海外解析，走代理）---
 HOST-SUFFIX,byteoversea.com,proxy
-HOST-SUFFIX,yhgfb-static.com,proxy
+HOST-SUFFIX,byteoversea.net,proxy
+HOST-SUFFIX,byteintl.net,proxy
+HOST-SUFFIX,ibytedtos.com,proxy
+HOST-SUFFIX,ibyteimg.com,proxy
+HOST-SUFFIX,bytefcdn-oversea.com,proxy
+
+# --- 火山引擎 Volcengine 媒体后端（音视频，走代理）---
+# 注意：仅放行 volcvideo（媒体），不放行 volces.com 等火山主域，避免影响国内火山引擎服务。
 HOST-SUFFIX,volcvideo.com,proxy
-HOST-SUFFIX,volcvideos.com,proxy
-HOST-SUFFIX,doubao.com,proxy
 
-# Observed Dola/Cici SG hosts from current web entrypoints.
-HOST,mcs-sg.ciciai.com,proxy
-HOST,opt-i18n.ciciai.com,proxy
-HOST,p16-flow-sign-sg.ciciai.com,proxy
-HOST,vmweb-sg.ciciai.com,proxy
-HOST,vcs-sg.byteoversea.com,proxy
-HOST,sgali-mcs.byteoversea.com,proxy
-HOST,starling-oversea.byteoversea.com,proxy
-HOST,mon-sg.byteintlapi.com,proxy
-HOST,sf16-short-sg.bytedapm.com,proxy
-HOST,sf3-short.ibytedapm.com,proxy
-HOST,p16-flow-sign-sg.ibyteimg.com,proxy
-HOST,lf-flow-web-cdn.doubao.com,proxy
-HOST,lf-rc1.yhgfb-static.com,proxy
-HOST,sf-flow-web-cdn.ciciai.com,proxy
-HOST,sf-flow-web-cdn.ciciaicdn.com,proxy
-HOST,sf-sf-flow-web-cdn-nontt.ciciaicdn.com,proxy
-
-# --- Tracking / attribution ---
+# --- 追踪 / 分析 / 崩溃上报（建议拦截，不影响核心功能）---
 HOST-SUFFIX,appsflyersdk.com,REJECT
-HOST,app-analytics-services.com,REJECT
+HOST-SUFFIX,app-analytics-services.com,REJECT
+HOST-SUFFIX,ibytedapm.com,REJECT
 HOST,log-report.volcvideos.com,REJECT
