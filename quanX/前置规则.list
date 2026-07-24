@@ -1,0 +1,49 @@
+# Quantumult X - 前置直连规则
+# 用途：修复云闪付定位/首页推广内容异常，以及 App Store 无法联网的问题。
+# 用法：请将本规则放在 [filter_remote] 的前部，并置于其他分流规则之前。
+# 本文件已内置 DIRECT，请勿设置 force-policy，否则会覆盖文件内策略。
+#
+# 兼容 Apple_Push.list：本规则刻意不包含 apple.com 全域和 17.0.0.0/8，
+# 因而不会抢先匹配 push.apple.com 或 APNs 专用 IP 段。
+# 注意：HTTPS 解密、重写脚本及 hostname 排除不属于分流规则，需在 QuanX 配置中另行设置。
+
+# --- 云闪付 / 银联：定位、首页内容、支付与基础服务直连 ---
+HOST-SUFFIX,95516.com,DIRECT
+HOST-SUFFIX,95516.net,DIRECT
+HOST-SUFFIX,airepay.net,DIRECT
+HOST-SUFFIX,chinapay.cn,DIRECT
+HOST-SUFFIX,chinapay.com,DIRECT
+HOST-SUFFIX,chinapayhongkong.com,DIRECT
+HOST-SUFFIX,chinaunionpay.com,DIRECT
+HOST-SUFFIX,chinaunionpay.com.cn,DIRECT
+HOST-SUFFIX,chinaunionpay.net,DIRECT
+HOST-SUFFIX,cup.com.cn,DIRECT
+HOST-SUFFIX,cup62.cn,DIRECT
+HOST-SUFFIX,unionpay.com,DIRECT
+HOST-SUFFIX,unionpay.net,DIRECT
+HOST-SUFFIX,unionpayintl.cn,DIRECT
+HOST-SUFFIX,unionpayintl.com,DIRECT
+HOST-SUFFIX,unionpaysecure.com,DIRECT
+
+# --- Apple 定位 / 地图：仅精确放行所需域名 ---
+HOST,gs-loc.apple.com,DIRECT
+HOST,gs-loc-cn.apple.com,DIRECT
+HOST-SUFFIX,ls.apple.com,DIRECT
+HOST-SUFFIX,apple-mapkit.com,DIRECT
+
+# --- App Store / Apple 账户、内容与静态资源直连 ---
+HOST,idmsa.apple.com,DIRECT
+HOST,appleid.apple.com,DIRECT
+HOST,gsa.apple.com,DIRECT
+HOST-SUFFIX,commerce.apple.com,DIRECT
+HOST-SUFFIX,apps.apple.com,DIRECT
+HOST-SUFFIX,itunes.apple.com,DIRECT
+HOST-SUFFIX,appstore.com,DIRECT
+HOST-SUFFIX,mzstatic.com,DIRECT
+HOST-SUFFIX,cdn-apple.com,DIRECT
+HOST-SUFFIX,aaplimg.com,DIRECT
+HOST-SUFFIX,apple.com.cn,DIRECT
+HOST-SUFFIX,icloud.com,DIRECT
+HOST-SUFFIX,icloud.com.cn,DIRECT
+HOST-SUFFIX,icloud-content.com,DIRECT
+HOST-SUFFIX,apple-cloudkit.com,DIRECT
