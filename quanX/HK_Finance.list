@@ -30,6 +30,9 @@ HOST-SUFFIX,zft2025.com,DIRECT
 HOST-SUFFIX,chieftrader1979.com,DIRECT
 HOST-SUFFIX,toptrader1979.com,DIRECT
 HOST-SUFFIX,cg1979.com,DIRECT
+HOST-SUFFIX,chiefquote.com,DIRECT
+HOST-SUFFIX,chiefquote.com.hk,DIRECT
+HOST-SUFFIX,chief-quote.com,DIRECT
 HOST-SUFFIX,chief-website.oss-cn-hongkong.aliyuncs.com,DIRECT
 HOST-SUFFIX,chiefgroup.udeskglobal.com,DIRECT
 HOST-SUFFIX,megahubhk.com,DIRECT
@@ -554,3 +557,18 @@ HOST-SUFFIX,hkexnews.hk,DIRECT
 HOST-SUFFIX,hkma.gov.hk,DIRECT
 HOST-SUFFIX,sfc.hk,DIRECT
 HOST-KEYWORD,hkex,DIRECT
+
+# ============================================================
+# DIRECT - China market data sources used by HK brokers (A-share quotes)
+# ============================================================
+HOST-SUFFIX,sseinfo.com,DIRECT
+HOST-SUFFIX,sse.com.cn,DIRECT
+HOST-SUFFIX,szse.cn,DIRECT
+HOST-SUFFIX,szse.com,DIRECT
+HOST-SUFFIX,eastmoney.com,DIRECT
+HOST-SUFFIX,quote.eastmoney.com,DIRECT
+HOST-SUFFIX,dfcfw.com,DIRECT
+HOST-SUFFIX,emquant.com,DIRECT
+HOST-SUFFIX,10jqka.com.cn,DIRECT
+HOST-SUFFIX,hexin.cn,DIRECT
+HOST-SUFFIX,hexin.com,DIRECT
