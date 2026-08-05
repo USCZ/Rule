@@ -12,6 +12,116 @@
 # 在线规则来源：Broker.list (Allen2023/broker-rules, MsMc, 2026-06-13) + 各券商官网核对。
 
 # ============================================================
+# DIRECT - 致富证券 Chief Securities / 致富通 (硬直连)
+# 致富 App 会检测 VPN 接口，走 proxy 会导致网络检测失败或速度极慢。
+# 放在所有 PROXY 规则之前，确保先命中 DIRECT。
+# ============================================================
+
+# --- 主品牌域 + KEYWORD 兜底 ---
+HOST-SUFFIX,chiefgroup.com.hk,DIRECT
+HOST-SUFFIX,chiefgroup.com,DIRECT
+HOST-SUFFIX,chieftrade.com,DIRECT
+HOST-SUFFIX,chiefsecurities.com.hk,DIRECT
+HOST-SUFFIX,chief.com.hk,DIRECT
+HOST-SUFFIX,chief-sec.com.hk,DIRECT
+HOST-SUFFIX,cm-chiefgroup.com,DIRECT
+HOST-SUFFIX,zft2000.com,DIRECT
+HOST-SUFFIX,zft2025.com,DIRECT
+HOST-SUFFIX,chieftrader1979.com,DIRECT
+HOST-SUFFIX,toptrader1979.com,DIRECT
+HOST-SUFFIX,cg1979.com,DIRECT
+HOST-SUFFIX,chief-website.oss-cn-hongkong.aliyuncs.com,DIRECT
+HOST-SUFFIX,chiefgroup.udeskglobal.com,DIRECT
+HOST-SUFFIX,megahubhk.com,DIRECT
+HOST-KEYWORD,chiefgroup,DIRECT
+HOST-KEYWORD,chieftrade,DIRECT
+HOST-KEYWORD,chiefsecurities,DIRECT
+HOST-KEYWORD,chief-sec,DIRECT
+HOST-KEYWORD,megahubhk,DIRECT
+HOST-KEYWORD,zft2000,DIRECT
+HOST-KEYWORD,zft2025,DIRECT
+HOST-KEYWORD,cg1979,DIRECT
+HOST-KEYWORD,toptrader1979,DIRECT
+HOST-KEYWORD,chieftrader1979,DIRECT
+# Push / analytics services used by Chief apps (Engagelab / JPush)
+HOST-SUFFIX,engagelab.com,DIRECT
+HOST-KEYWORD,engagelab,DIRECT
+
+# --- 显式子域规则 (HOST-SUFFIX 在某些客户端不可靠，补显式 HOST) ---
+HOST,api.chiefgroup.com.hk,DIRECT
+HOST,api2.chiefgroup.com.hk,DIRECT
+HOST,ca.chiefgroup.com.hk,DIRECT
+HOST,cas.chiefgroup.com.hk,DIRECT
+HOST,cdn.chiefgroup.com.hk,DIRECT
+HOST,chief-deposit.chiefgroup.com.hk,DIRECT
+HOST,common-h5.chiefgroup.com.hk,DIRECT
+HOST,df.chiefgroup.com.hk,DIRECT
+HOST,ipo-h5.chiefgroup.com.hk,DIRECT
+HOST,quote.chiefgroup.com.hk,DIRECT
+HOST,service.chiefgroup.com.hk,DIRECT
+HOST,speedweb.chiefgroup.com.hk,DIRECT
+HOST,toptrader.chiefgroup.com.hk,DIRECT
+HOST,toptrader1.chiefgroup.com.hk,DIRECT
+HOST,toptrader2.chiefgroup.com.hk,DIRECT
+HOST,toptrader3.chiefgroup.com.hk,DIRECT
+HOST,toptrader4.chiefgroup.com.hk,DIRECT
+HOST,api.cm-chiefgroup.com,DIRECT
+HOST,api1.cm-chiefgroup.com,DIRECT
+HOST,api2.cm-chiefgroup.com,DIRECT
+HOST,quote.zft2025.com,DIRECT
+HOST,common-h5.chiefgroup.com,DIRECT
+HOST,common-h5.zft2000.com,DIRECT
+HOST,common-h5.cg1979.com,DIRECT
+HOST,common-h5.toptrader1979.com,DIRECT
+HOST,common-h5.chieftrader1979.com,DIRECT
+HOST,common-h5.zft2025.com,DIRECT
+HOST,service.zft2025.com,DIRECT
+HOST,service.chieftrader1979.com,DIRECT
+HOST,cdn.chiefgroup.com,DIRECT
+HOST,cdn.cm-chiefgroup.com,DIRECT
+HOST,cdn.zft2000.com,DIRECT
+HOST,cdn.zft2025.com,DIRECT
+HOST,cdn.chieftrader1979.com,DIRECT
+HOST,cdn.toptrader1979.com,DIRECT
+HOST,cdn.cg1979.com,DIRECT
+HOST,chief-deposit.chiefgroup.com,DIRECT
+HOST,chief-deposit.cm-chiefgroup.com,DIRECT
+HOST,chief-deposit.zft2000.com,DIRECT
+HOST,chief-deposit.zft2025.com,DIRECT
+HOST,chief-deposit.chieftrader1979.com,DIRECT
+HOST,chief-deposit.toptrader1979.com,DIRECT
+HOST,chief-deposit.cg1979.com,DIRECT
+HOST,quote.chiefgroup.com,DIRECT
+HOST,quote.cm-chiefgroup.com,DIRECT
+HOST,quote.zft2000.com,DIRECT
+HOST,quote.chieftrader1979.com,DIRECT
+HOST,quote.toptrader1979.com,DIRECT
+HOST,quote.cg1979.com,DIRECT
+HOST,api.chiefgroup.com,DIRECT
+HOST,api.zft2000.com,DIRECT
+HOST,api.zft2025.com,DIRECT
+HOST,api.chieftrader1979.com,DIRECT
+HOST,api.toptrader1979.com,DIRECT
+HOST,api.cg1979.com,DIRECT
+HOST,api1.chiefgroup.com,DIRECT
+HOST,api1.zft2000.com,DIRECT
+HOST,api1.zft2025.com,DIRECT
+HOST,api1.chieftrader1979.com,DIRECT
+HOST,api1.toptrader1979.com,DIRECT
+HOST,api1.cg1979.com,DIRECT
+HOST,api2.chiefgroup.com,DIRECT
+HOST,api2.zft2000.com,DIRECT
+HOST,api2.zft2025.com,DIRECT
+HOST,api2.chieftrader1979.com,DIRECT
+HOST,api2.toptrader1979.com,DIRECT
+HOST,api2.cg1979.com,DIRECT
+HOST,service.chiefgroup.com,DIRECT
+HOST,service.cm-chiefgroup.com,DIRECT
+HOST,service.zft2000.com,DIRECT
+HOST,service.toptrader1979.com,DIRECT
+HOST,service.cg1979.com,DIRECT
+
+# ============================================================
 # 一、中资跨境互联网券商（受 6·12 影响最大，务必走 proxy）
 # ============================================================
 
@@ -172,21 +282,7 @@ HOST-KEYWORD,bbae,proxy
 # 三、香港本地券商（港股 / 打新，走 proxy）
 # ============================================================
 
-# --- 致富证券 Chief Securities / 致富通 + Megahub 行情 ---
-HOST-SUFFIX,chiefgroup.com.hk,proxy
-HOST-SUFFIX,chiefgroup.com,proxy
-HOST-SUFFIX,chieftrade.com,proxy
-HOST-SUFFIX,chiefsecurities.com.hk,proxy
-HOST-SUFFIX,chief.com.hk,proxy
-HOST-SUFFIX,chief-sec.com.hk,proxy
-HOST-SUFFIX,chief-website.oss-cn-hongkong.aliyuncs.com,proxy
-HOST-SUFFIX,chiefgroup.udeskglobal.com,proxy
-HOST-SUFFIX,megahubhk.com,proxy
-HOST-KEYWORD,chiefgroup,proxy
-HOST-KEYWORD,chieftrade,proxy
-HOST-KEYWORD,chiefsecurities,proxy
-HOST-KEYWORD,chief-sec,proxy
-HOST-KEYWORD,megahubhk,proxy
+# --- 致富证券 Chief Securities 已移至文件顶部 DIRECT 块 ---
 
 # --- 耀才证券 Bright Smart ---
 HOST-SUFFIX,brightsmart.com.hk,proxy
