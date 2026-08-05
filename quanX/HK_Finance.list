@@ -46,6 +46,9 @@ HOST-KEYWORD,chieftrader1979,DIRECT
 # Push / analytics services used by Chief apps (Engagelab / JPush)
 HOST-SUFFIX,engagelab.com,DIRECT
 HOST-KEYWORD,engagelab,DIRECT
+# Volcengine (火山引擎) UBA analytics used by Chief apps
+HOST-SUFFIX,uba.ap-southeast-1.volces.com,DIRECT
+HOST,gator.uba.ap-southeast-1.volces.com,DIRECT
 
 # --- 显式子域规则 (HOST-SUFFIX 在某些客户端不可靠，补显式 HOST) ---
 HOST,api.chiefgroup.com.hk,DIRECT
