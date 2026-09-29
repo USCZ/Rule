@@ -1,6 +1,6 @@
 # ============================================================
 # Quantumult X 规则集 · 港美股券商 + 香港金融（混合分流）
-# 文件：quanX/HK_Finance.list        版本：v2.0        更新：2026-09-29
+# 文件：quanX/HK_Finance.list        版本：v2.1        更新：2026-09-29
 # 仓库：https://github.com/USCZ/Rule
 # ------------------------------------------------------------
 # 【用途】
@@ -33,7 +33,7 @@
 #   ⟹ 券商【交易 / 行情 / 登录 / 资金】一律走 proxy；
 #      银行 / 支付 / 监管官网走 DIRECT（不受此次整治影响，直连更稳更快）。
 #
-# 【v2.0 相对 v1 的修订】规则总数 451 → 335
+# 【v2.1 相对 v1 的修订】规则总数 451 → 338
 #   1. 删除原第六节的 43 条 /23、/24 网段，只保留 20 条 /32 精确主机。
 #      被删段中含腾讯云【大陆】段 —— 详见文件末尾「关于 IP 段」。
 #   2. 删除 73 条与 HOST-SUFFIX 完全重复的 HOST 显式规则
@@ -42,9 +42,11 @@
 #      （octopus.com 是英国 Octopus Energy / Octopus Deploy；
 #        八达通卡官网是 octopus.com.hk）。
 #   4. 补齐：futu.hk（ibkr.com.hk 上游已有，未重复添加）。
-#   5. 分节重排为「先直连、后代理」，与策略分布一致，便于审计。
-#   6. 全文件去重（同类型 + 同值）。
-#   最终：335 条 = 142 DIRECT + 193 proxy
+#   5. 补齐中银国际 BOCI 的 3 个遗漏域名（bocichina.com.cn / bocichina.cn /
+#      boci.com.hk，均经 DNS 与站点验证），见 2-19 节注释。
+#   6. 分节重排为「先直连、后代理」，与策略分布一致，便于审计。
+#   7. 全文件去重（同类型 + 同值）。
+#   最终：338 条 = 142 DIRECT + 196 proxy
 # ============================================================
 
 
@@ -490,8 +492,16 @@ HOST-KEYWORD,gtjai,proxy
 # ============================================================
 # 2-19  香港本地券商 · 中银国际证券 BOCI
 # ============================================================
+# bocichina.com.cn 经 DNS 验证为 bocichina.com 的 CNAME 别名（同一实体）；
+# bocichina.cn 有 NS/SOA 与 SPF（腾讯企业邮），同属中银国际证券；
+# boci.com.hk 为母公司中银国际控股（www.boci.com.hk 返回 200）。
+# 注意 HOST-SUFFIX,bocichina.com 不覆盖 bocichina.com.cn（后缀不以 .bocichina.com 结尾），
+# 故必须单独列出。
 
 HOST-SUFFIX,bocichina.com,proxy
+HOST-SUFFIX,bocichina.com.cn,proxy
+HOST-SUFFIX,bocichina.cn,proxy
+HOST-SUFFIX,boci.com.hk,proxy
 
 # ============================================================
 # 2-20  香港本地券商 · 宝盛 Monex BOOM

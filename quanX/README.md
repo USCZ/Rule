@@ -55,7 +55,7 @@ https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list
 >
 > **唯一例外 · 致富证券（Chief / 致富通）**：其 App 会主动检测 VPN 虚拟网卡接口，走 `proxy` 会导致「网络检测失败」或速度极慢，因此与银行同类**强制 `DIRECT`**，且放在文件最前面。
 
-**文件结构（2 部分 · 31 个分节，共 335 条：193 `proxy` / 142 `DIRECT`）**
+**文件结构（2 部分 · 31 个分节，共 338 条：196 `proxy` / 142 `DIRECT`）**
 
 > 分节按「先直连、后代理」排列，与策略分布一致，便于审计。
 
@@ -71,7 +71,7 @@ https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list
 | 1-6 交易所 / 监管 | 5 | HKEX、HKMA、SFC |
 | 1-7 大陆 A 股行情源 | 11 | 券商用的大陆行情接口（多已被 `geoip, cn` 覆盖，此处显式声明） |
 
-**第二部分 · `proxy`（193 条）**
+**第二部分 · `proxy`（196 条）**
 
 | 分节 | 条数 | 覆盖 |
 | --- | --- | --- |
@@ -93,7 +93,7 @@ https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list
 | 2-16 第一上海 First Shanghai | 2 | |
 | 2-17 海通国际 Haitong International | 3 | |
 | 2-18 国泰君安国际 GTJA International | 2 | |
-| 2-19 中银国际证券 BOCI | 1 | |
+| 2-19 中银国际证券 BOCI | 4 | 中银国际证券 + 母公司中银国际控股 |
 | 2-20 宝盛 Monex BOOM | 3 | |
 | 2-21 富邦证券（香港）Fubon | 1 | |
 | 2-22 FSMOne / Fundsupermart / iFAST | 9 | |
@@ -282,12 +282,13 @@ rules:
 
 ### 2026-09-29
 
-**HK_Finance.list v2.0** —— 全文件审计后重构，规则 451 → **335 条（142 `DIRECT` / 193 `proxy`）**：
+**HK_Finance.list v2.1** —— 全文件审计后重构，规则 451 → **338 条（142 `DIRECT` / 196 `proxy`）**：
 
 - **删除 43 条 `/23`、`/24` IP 网段**，只保留 20 条 `/32` 精确主机。被删段中 13 条是**腾讯云大陆段**（`1.14.242.0/23`、`42.193.128.0/24`、`106.55.66.0/23` 等）——作为远程条目时会被本地 `geoip, cn, direct` 先行命中，属纯负担；但一旦被搬进 `[filter_local]` 就会抢先命中、把大陆 IP 劫持进代理，公共规则集必须消除这个隐患。
 - **删除 73 条冗余 `HOST` 规则**：致富证券 72 条显式子域（`api.` / `cdn.` / `quote.` / `service.` / `toptrader.` …）全部被 `HOST-SUFFIX` 覆盖，另 1 条 `HOST,gator.uba.ap-southeast-1.volces.com`。
 - **修正误判**：`HOST-SUFFIX,octopus.com,DIRECT` → **`octopus.com.hk`**（`octopus.com` 是英国 Octopus Energy / Octopus Deploy；八达通卡官网是 `octopus.com.hk`）。
 - **补齐** `futu.hk`（`ibkr.com.hk` 上游已有，未重复添加）。
+- **补齐中银国际 BOCI 的 3 个遗漏域名**：`bocichina.com.cn`（经 DNS 验证为 `bocichina.com` 的 CNAME 别名）、`bocichina.cn`（有 NS / SOA / SPF，同属该机构）、`boci.com.hk`（母公司中银国际控股，`www.boci.com.hk` 返回 200）。注意 `HOST-SUFFIX,bocichina.com` **不**覆盖 `bocichina.com.cn`（后缀匹配要求以 `.bocichina.com` 结尾），必须单独列出。
 - **分节重排为「先直连、后代理」**，编号 1-1…1-7 / 2-1…2-24，与策略分布一致；全文件按「同类型 + 同值」去重。
 
 ### 2026-06-16
