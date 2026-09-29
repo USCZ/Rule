@@ -6,7 +6,10 @@
 
 > 面向中国大陆 / 香港用户的 **Quantumult X** 分流规则：港股/美股券商、Apple 推送（APNs）、Dola（豆包海外版）。
 >
-> 所有规则**已在文件内写好 `DIRECT` / `proxy` / `REJECT` 策略**，订阅后即生效，**请勿再设置 `force-policy`**（否则会覆盖文件内的混合策略）。
+> 三份文件的策略**都已写在文件内**，订阅后即生效。**是否加 `force-policy` 要按文件区分**：
+> - `Apple_Push.list` —— 全文 `proxy`，**加不加都安全**（加了就用你指定的策略组）；
+> - `HK_Finance.list` / `Dola.list` —— `DIRECT` / `proxy` / `REJECT` **混用**，**不要加**，
+>   否则文件内的 `DIRECT`（银行 / 交易所）与 `REJECT`（追踪拦截）会被一起覆盖。
 
 ---
 
@@ -30,10 +33,13 @@
 | 文件 | 用途 | 内置策略 | 分流要点 | 更新 |
 | --- | --- | --- | --- | --- |
 | [HK_Finance.list](HK_Finance.list) | 港股 / 美股券商 + 香港银行金融分流 | `proxy` / `DIRECT` | 券商 → `proxy`；银行 / 支付 / 监管 / 致富证券 → `DIRECT` | 2026-09-29 |
-| [Apple_Push.list](Apple_Push.list) | Apple 推送（APNs）走代理，恢复海外 App 通知 | `proxy` | 全部 → `proxy` | 2026-06-16 |
-| [Dola.list](Dola.list) | Dola / Cici（豆包海外版）分流 + 追踪拦截 | `proxy` / `REJECT` | 核心 → `proxy`（新加坡），追踪 → `REJECT` | 2026-06-16 |
+| [Apple_Push.list](Apple_Push.list) | Apple 推送（APNs）走代理，恢复海外 App 通知 | `proxy` | 全部 → `proxy`（12 条） | 2026-09-29 |
+| [Dola.list](Dola.list) | Dola / Cici（豆包海外版）分流 + 追踪拦截 | `proxy` / `REJECT` | 核心 → `proxy`（新加坡，10 条），追踪 → `REJECT`（4 条） | 2026-09-29 |
 
-> ⚠️ 规则中的 `proxy` 是**自定义策略组名**，需在你的 Quantumult X 配置中存在名为 `proxy` 的 policy；`DIRECT` / `REJECT` 为内置策略。
+> ⚠️ 规则里的 `proxy` 是 **Quantumult X 内置策略**（不是自定义策略组名），含义是「走代理」，
+> 具体出口由 **QX 主界面当前选中的节点 / 策略组**决定；`DIRECT` / `REJECT` 同样是内置策略。
+> 官方原文：「Quantumult X 默认有 3 个自带策略：`DIRECT` 直连 / `PROXY` 代理 / `REJECT` 阻止」。
+> 因此**不需要**在你的配置里额外定义名为 `proxy` 的策略组。
 
 ---
 
@@ -119,18 +125,51 @@ https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Apple_Push.list
 
 **背景**：2026 年 5 月起，部分大陆网络环境下 iOS 对部分海外 App（**Telegram、X / Twitter** 等）的 APNs 推送被屏蔽 / 异常；将 APNs 走海外代理后可恢复推送。
 
-**内容**
+**内容（v2.0，共 12 条，全部 `proxy`）**
 
-- `HOST-SUFFIX,push.apple.com` → `proxy`（承载规则，覆盖 `*-courier`、`init` 等所有子域）。
-- Akamai 上的 **APNs 专用 CNAME**（`push-apple.com.akadns.net`、`courier-push-apple.com.akadns.net`、`init-*-lb.push-apple.com.akadns.net`）→ `proxy`，精确匹配，避免波及其他 Akamai 服务。
-- APNs IPv4（`17.249.0.0/16`、`17.252.0.0/16`、`17.57.144.0/22`、`17.188.128.0/18`、`17.188.20.0/23`）与 IPv6 网段 → `proxy, no-resolve`。
-- 宽泛的 `akadns.net` / `apple.com.edgekey.net` **默认注释关闭**（过宽会误伤其他 Akamai/Edgekey 服务）；如推送仍异常可手动解开。
+- `HOST-SUFFIX,push.apple.com` → `proxy`。承载推送长连接的 `N-courier.push.apple.com` 就挂在它下面。
+  注意 `push.apple.com` 本身**没有 A 记录**，只有 `N-courier.*` 这类子域有，所以必须用 `HOST-SUFFIX` 而不是 `HOST`。
+- `HOST-SUFFIX,push-apple.com.akadns.net` → `proxy`。**v2.0 由 4 条 `HOST` 合并而来**（原为 apex + 3 条 `init-*-lb`），
+  QX 的 `HOST-SUFFIX` 匹配任意层级子域，因此是**严格超集** —— 还能覆盖未来新增的 init 变体与 courier 的 CNAME 目标。
+- `HOST-SUFFIX,courier-push-apple.com.akadns.net` → `proxy`（同理，覆盖 `1.courier-push-apple.com.akadns.net` 等实际名字）。
+- **IPv4 5 条**（`17.249.0.0/16`、`17.252.0.0/16`、`17.57.144.0/22`、`17.188.128.0/18`、`17.188.20.0/23`）
+  与 **IPv6 4 条** → `proxy, no-resolve`。**与 Apple 官方列表逐条核对，完全一致**（见「参考来源」）。
+- 宽泛的 `akadns.net` / `apple.com.edgekey.net` **默认注释关闭**（过宽会误伤其他 Akamai / Edgekey 服务）；如推送仍异常可手动解开。
+
+**为什么不用整个 `17.0.0.0/8`**
+
+Apple 官方原话是「**最好**让设备访问整个 `17.0.0.0/8`（该网段已分配给 Apple）」，那 5 个 IPv4 段是官方给出的
+「做不到 17/8 时的最小集合」。本文件采用最小集合，避免把 App Store 下载、iCloud、软件更新等 Apple 流量一并代理掉。
+
+**域名规则与 IP 规则为什么要并存**
+
+`no-resolve` 表示「不为了匹配本规则而额外做 DNS 解析」。所以：
+设备用域名连 → 由 `HOST-SUFFIX` 命中；设备用缓存 IP 直连 → 由 `IP-CIDR` 命中。两条路径都覆盖，这正是两类规则并存的原因。
 
 **注意事项**
 
 1. **切勿对 `push.apple.com` 启用 HTTPS 解密（MITM）**，否则推送 TLS 握手失败。
-2. **蜂窝（移动数据）下需在代理工具中开启「包含 APNS / 全部网络」**，否则会间歇性失效；规则生效后开关一次飞行模式让长连接重连。
-3. APNs 走代理后，**节点故障会导致所有推送（含国内）异常**；建议把 `proxy` 指向「稳定节点 + `DIRECT` 兜底」的策略组。
+   等价说法：不要在 `[mitm] hostname` 里写 `push.apple.com` 或 `*.apple.com`。
+2. **端口**：设备侧 TCP **5223** 为主，**443 / 2197** 为回落。属运营商 / 防火墙层面，代理侧无需额外配置。
+3. APNs 走代理后，**节点故障会导致所有推送（含国内）异常**；请把 `proxy` 指向**稳定节点**，不要用抖动大的自动测速组。
+4. **本文件全 `proxy`，加 `force-policy` 是安全的**（v1 头部照抄了混合策略文件的模板，误写成「请勿设置」，v2.0 已改正）。
+
+**一个需要实测的观察项**
+
+实测（2026-09-29，DoH ECS = 中国大陆）：`init-*-lb.push-apple.com.akadns.net` 在大陆解析到 **金山云 CDN**：
+
+```text
+init-p01md-lb.push-apple.com.akadns.net
+  → init-p01md-cn.push-apple.com.akadns.net
+  → init-p01md.apple.com.download.ks-cdn.com
+  → k128-mzstatic.gslb.ksyuncdn.com
+```
+
+而真正的推送长连接走 `N-courier.push.apple.com` → `17.57.145.x`（落在官方 `17.57.144.0/22` 内）。
+也就是说 `init-*` 是 APNs 的**初始化资源**步骤，由 Apple 的**大陆 CDN** 承载、本身没被墙；把它也代理到海外，
+理论上会让这一步改用海外 CDN、变慢。保留它是因为无法在无 iOS 设备的情况下验证移除是否影响推送
+（按「不改无法验证的行为」原则）。若你实测推送正常但启动变慢，可注释掉 `push-apple.com.akadns.net` 那一行，
+`N-courier.push.apple.com` 由第一条规则单独覆盖、不受影响。
 
 ---
 
@@ -144,15 +183,48 @@ https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Dola.list
 
 **应用**：Dola（原 **Cici**，包名 `com.larus.wolf`，开发商 **SPRING (SG) PTE. LTD.** / 字节跳动海外 AI 助手）。区域锁定、仅限海外，大陆直连会被区域限制拦截，**必须走海外节点**；开发主体在新加坡，**建议在 `proxy` 组内优先选择新加坡节点**。
 
-**内容**
+**内容（v2.0，共 14 条 = 10 `proxy` + 4 `REJECT`）**
 
 - **走 `proxy`**：
-  - 核心服务 `dola.com`、`ciciai.com`
+  - 核心服务 `dola.com`、**`cici.com`（v2.0 新增）**、`ciciai.com`
   - 字节海外基础设施（仅海外解析）`byteoversea.com`、`byteoversea.net`、`byteintl.net`、`ibytedtos.com`、`ibyteimg.com`、`bytefcdn-oversea.com`
   - 火山引擎媒体后端 `volcvideo.com`（仅放行媒体域，**不放行 `volces.com` 等火山主域**，避免影响国内火山服务）
 - **走 `REJECT`**（追踪 / 分析 / 崩溃上报，不影响核心功能）：`appsflyersdk.com`、`app-analytics-services.com`、`ibytedapm.com`、`log-report.volcvideos.com`
 
-> 文件内已分别写明 `proxy` / `REJECT`，**不要**加 `force-policy`，否则拦截规则会失效。
+**v2.0 为什么补了 `cici.com`**
+
+v1 只写了 `ciciai.com`，漏了 `cici.com`。实测（2026-09-29）：`cici.com` 与 `www.ciciai.com` 解析到**同一组 Akamai IP**
+（`cici.com.edgesuite.net` → `a379.t.akamai.net` → `23.46.155.2xx`），且 `cici.com` 就是 Dola 当前的**官方站点**
+（`https://www.cici.com/` 标题「Dola, your AI assistant.」）。只写 `ciciai.com` 会让访问 `cici.com` 的请求落到 `final`。
+
+**⚠️ `REJECT` 段这四个都是「第三方通用」域名，不是 Dola 专属**
+
+| 域名 | 归属 | 说明 |
+| --- | --- | --- |
+| `appsflyersdk.com` | AppsFlyer | 归因 SDK，被**大量** App 使用 |
+| `app-analytics-services.com` | **Google**（Firebase Analytics） | 由 `firebase-ios-sdk` issue #12720 确认，**别被名字误导成 Apple 的** |
+| `ibytedapm.com` | 字节 APM | 崩溃 / 性能上报 |
+| `log-report.volcvideos.com` | 字节 | 日志上报。注意是 `volcvideos`（**复数**），与上面走代理的 `volcvideo`（单数）**不是同一个域名**；实测只有 `log-report` 这一个子域存在（`log.` / `report.` / `api.volcvideos.com` 均 NXDOMAIN），故用 `HOST` 精确匹配 |
+
+拦截它们会**同时影响其它使用同一 SDK 的 App**。对本仓库的用途（去广告 / 隐私）而言这是期望行为；
+若你依赖某个 App 的归因统计，把对应行改成 `proxy` 即可。
+
+> **`force-policy` 的取舍**：文件内 `proxy` / `REJECT` 混用，**不要**加 `force-policy`，否则拦截会失效。
+> 若你确实需要统一策略（例如固定走「特殊节点」），请**在本地 `[filter_local]` 把这 4 条补回来**（本地规则优先于远程）：
+>
+> ```ini
+> host-suffix, appsflyersdk.com, reject
+> host-suffix, app-analytics-services.com, reject
+> host-suffix, ibytedapm.com, reject
+> host, log-report.volcvideos.com, reject
+> ```
+
+**未收录的候选域名（观察项：已核查，但证据不足，故不加）**
+
+- `dola.ai` —— HTTP 200 但只有 114 字节的占位页，无法确认归属
+- `cici.ai` —— HTTP 436，无法确认归属
+- `dola.com.cn` —— 域名已**过期**，解析到 `overdue.aliyun.com`（阿里云过期域名页）
+- `byteintl.com` —— 域名存在（apex 无 A 记录），但与 `byteintl.net` 是否同用途未验证
 
 ---
 
@@ -271,10 +343,12 @@ rules:
 
 ## 🧩 策略组要求
 
-- `proxy`：**自定义代理策略组**，必须在你的 Quantumult X 配置 `[policy]` 中存在同名 policy。
-- Apple Push 的 `proxy` 建议指向「稳定节点 + `DIRECT` 兜底」组（避免节点故障导致全部推送异常）。
-- Dola 的 `proxy` 建议指向**新加坡**节点 / 策略组。
-- `DIRECT` / `REJECT` 为 Quantumult X 内置策略，无需额外定义。
+- `proxy`：**Quantumult X 内置策略**，含义是「走代理」，出口由 **QX 主界面当前选中的节点 / 策略组**决定。
+  **不需要**（也不应该）在你的配置里定义名为 `proxy` 的策略组 —— 与内置策略重名行为不可预期。
+  若想让某份规则固定走某个策略组，请用 `force-policy=<你的策略组>`（注意先看该文件是否混用策略）。
+- `DIRECT` / `REJECT` 同样是 Quantumult X 内置策略，无需额外定义。
+- Apple Push 的出口建议选**稳定节点**（避免节点故障导致全部推送异常）；
+  Dola 建议选**新加坡**节点 —— 两者都可以通过 `force-policy` 指定专属策略组来实现。
 
 ---
 
@@ -290,6 +364,21 @@ rules:
 - **补齐** `futu.hk`（`ibkr.com.hk` 上游已有，未重复添加）。
 - **补齐中银国际 BOCI 的 3 个遗漏域名**：`bocichina.com.cn`（经 DNS 验证为 `bocichina.com` 的 CNAME 别名）、`bocichina.cn`（有 NS / SOA / SPF，同属该机构）、`boci.com.hk`（母公司中银国际控股，`www.boci.com.hk` 返回 200）。注意 `HOST-SUFFIX,bocichina.com` **不**覆盖 `bocichina.com.cn`（后缀匹配要求以 `.bocichina.com` 结尾），必须单独列出。
 - **分节重排为「先直连、后代理」**，编号 1-1…1-7 / 2-1…2-24，与策略分布一致；全文件按「同类型 + 同值」去重。
+
+**Apple_Push.list v2.0** —— 规则 15 → **12 条（全部 `proxy`）**：
+
+- **合并 4 条 `HOST` 为 1 条 `HOST-SUFFIX`**：原写 apex `push-apple.com.akadns.net` + 3 条 `init-*-lb.push-apple.com.akadns.net`；QX 的 `HOST-SUFFIX` 匹配任意层级子域，合并后是**严格超集**（覆盖未来新增变体 + courier 的 CNAME 目标）。同理 `courier-push-apple.com.akadns.net` 由 `HOST` 改 `HOST-SUFFIX`。
+- **9 个 IP 段与 Apple 官方列表逐条核对，完全一致**（IPv4 5 条 + IPv6 4 条）。
+- **改正头部表述**：v1 直接写「请勿设置 force-policy」，那是照抄混合策略文件的模板 —— 本文件全 `proxy`，加 `force-policy` 是**安全**的，原表述会让使用者误以为必须放弃统一策略组。
+- 补充端口（5223 主 / 443·2197 回落）、`no-resolve` 与域名规则并存的原因、以及「为何不用整个 `17.0.0.0/8`」。
+- 记录一个**观察项**：`init-*-lb.push-apple.com.akadns.net` 在大陆解析到**金山云 CDN**（`*.apple.com.download.ks-cdn.com`），属 APNs 初始化步骤、本身没被墙；真正被墙的是 `N-courier.push.apple.com`。
+
+**Dola.list v2.0** —— 规则 13 → **14 条（10 `proxy` + 4 `REJECT`）**：
+
+- **补齐 `cici.com`**（v1 只写了 `ciciai.com`）。实测 `cici.com` 与 `www.ciciai.com` 解析到同一组 Akamai IP，且 `cici.com` 就是 Dola 当前官方站点（标题「Dola, your AI assistant.」）。
+- **头部补齐「`force-policy` 会消灭 `REJECT` 时怎么办」** —— 给出在本地补回那 4 条的现成写法。
+- **`REJECT` 段补充归属说明**：`app-analytics-services.com` 是 **Google Firebase Analytics**（不是 Apple 的，别被名字误导）；`log-report.volcvideos.com` 是 `volcvideos` **复数**，与走代理的 `volcvideo` 单数不是同一域名；这四个都是**第三方通用**域名，拦截会影响其它 App。
+- 记录 4 个**观察项**（`dola.ai` / `cici.ai` / `dola.cn` 类域名 / `byteintl.com`）：已核查但证据不足，故不收录。
 
 ### 2026-06-16
 
@@ -312,5 +401,7 @@ rules:
 
 - 证监会立案 / 三大券商限购时间表：[新浪财经](https://finance.sina.com.cn/jjxw/2026-06-05/doc-iniahnxe3313627.shtml) · [21 经济网](https://www.21jingji.com/article/20260605/herald/46c67c0f120bcfc59b77497e0791a21c.html)
 - 券商域名 / IP 规则：Broker.list（`Allen2023/broker-rules`，2026-06-13）、[blackmatrix7/ios_rule_script](https://github.com/blackmatrix7/ios_rule_script)
-- iOS 海外 App 推送异常与 APNs 代理：社区实测（V2EX / NodeSeek）、[Apple 官方推送排障 102266](https://support.apple.com/en-us/102266)
+- iOS 海外 App 推送异常与 APNs 代理：社区实测（V2EX / NodeSeek）、[Apple 官方推送排障 102266](https://support.apple.com/en-us/102266)（本仓库 APNs 的 9 个 IP 段即出自该文档，2026-09-29 复核一致）
+- Quantumult X 内置策略（`DIRECT` / `PROXY` / `REJECT`）与规则优先级：[DivineEngine《Quantumult X 入门：策略与分流》](https://divineengine.net/article/quantumult-x-filter-and-policy/)
+- `app-analytics-services.com` 归属 Google Firebase Analytics：[firebase-ios-sdk issue #12720](https://github.com/firebase/firebase-ios-sdk/issues/12720)
 - 券商官网：[Eddid](https://www.eddid.com.hk/) · [第一上海](http://www.firstshanghai.com.hk/) · [海通国际](https://www.htisec.com) · [国泰君安国际](https://www.gtjai.com/sc) · [中银国际](http://www.bocichina.com) · [Firstrade](https://www.firstrade.com/)

@@ -1,28 +1,99 @@
-# Quantumult X - Apple Push / APNs 推送规则（走代理）
-# 背景：2026 年 5 月起，部分中国大陆网络环境下，iOS 对部分海外 App
-#       （Telegram、X/Twitter 等）的 APNs 推送被屏蔽 / 异常；
-#       将 APNs（push.apple.com 及其 IP 段）走海外代理后即可恢复推送。
-# 用法：本文件已按域名 / IP 写入 proxy，请勿在 [filter_remote] 再设置 force-policy。
-# 注意事项：
-#   1) 切勿对 push.apple.com 启用 HTTPS 解密(MITM)，否则推送 TLS 握手会失败。
-#   2) 蜂窝数据下需在代理工具中开启“包含 APNS / 全部网络”，否则会间歇性失效；
-#      规则生效后建议开关一次飞行模式，让 APNs 长连接重新建立。
-#   3) APNs 走代理后，一旦节点故障会导致所有推送（含国内）异常；
-#      建议将 proxy 指向“稳定节点 + DIRECT 兜底”的策略组。
+# ============================================================
+# Quantumult X 规则集 · Apple 推送（APNs）
+# 文件：quanX/Apple_Push.list        版本：v2.0        更新：2026-09-29
+# 仓库：https://github.com/USCZ/Rule
+# ------------------------------------------------------------
+# 【用途】把 APNs 走海外代理，恢复「海外 App（Telegram / X 等）收不到推送」。
+#
+# 【背景】2026 年 5 月起，部分中国大陆网络环境下 iOS 对部分海外 App 的 APNs
+#   推送被屏蔽 / 异常；将 APNs 走海外代理后即可恢复。
+#
+# 【用法】本文件【全部】为 proxy，因此加不加 force-policy 都安全：
+#   · 想让它跟随主界面选中节点 → 不要加 force-policy（用 QX 内置 PROXY）
+#   · 想让它固定走某个策略组   → 加 force-policy=<你的代理组>，例如：
+#     https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Apple_Push.list, tag=Apple Push, force-policy=全球加速, update-interval=86400, opt-parser=false, enabled=true
+#   本文件不含 DIRECT / REJECT，所以不存在「force-policy 覆盖内部策略」的问题。
+#   （v1 的头部直接写「请勿设置 force-policy」，那是照抄混合策略文件的模板，
+#     对本文件不成立，反而会让使用者以为必须放弃统一策略组 —— v2.0 已改正。）
+#
+# 【⚠ 三条硬性注意事项】
+#   1) 切勿对 push.apple.com 启用 HTTPS 解密（MITM），否则推送 TLS 握手会失败。
+#      等价说法：不要在 [mitm] hostname 里写 push.apple.com 或 *.apple.com。
+#   2) APNs 走代理后，节点故障会导致【所有】推送（含国内 App）异常。
+#      请把 proxy 指向「稳定节点」，不要用抖动大的自动测速组。
+#   3) 端口：设备侧 TCP 5223 为主，443 / 2197 为回落。
+#      这属于运营商 / 防火墙层面，代理侧无需额外配置。
+#
+# 【IP 段来源】Apple 官方《If your Apple devices aren't getting Apple push notifications》
+#   https://support.apple.com/en-us/102266  （2023-08-22 发布，2026-09-29 复核一致）
+#   官方原文：「TCP port 5223 to communicate with APNs」「The APNs servers use load
+#   balancing, so your devices don't always connect to the same public IP address.
+#   It's best to let your device access these ports on the entire 17.0.0.0/8 address
+#   block, which is assigned to Apple.」
+#   ⟹ 官方首选放行整个 17.0.0.0/8；下面 5 个 IPv4 段是官方给出的
+#     「做不到 17/8 时的最小集合」。本文件采用最小集合，
+#     避免把 App Store / iCloud / 软件更新等 Apple 流量一并代理掉。
+#
+# 【v2.0 相对 v1 的修订】规则 15 → 12
+#   1. 合并 4 条 HOST 为 2 条 HOST-SUFFIX：
+#        v1: HOST,push-apple.com.akadns.net
+#            HOST,init-p01st-lb.push-apple.com.akadns.net
+#            HOST,init-p01md-lb.push-apple.com.akadns.net
+#            HOST,init-s01st-lb.push-apple.com.akadns.net
+#        v2: HOST-SUFFIX,push-apple.com.akadns.net
+#      QX 的 HOST-SUFFIX 匹配任意层级子域，因此这是【严格超集】——
+#      除现有 3 个 init-* 外，还能覆盖未来新增的 init 变体（p02*/s02* 目前 NXDOMAIN，
+#      但不保证以后不出现），以及 courier 的 CNAME 目标。
+#      同理 HOST,courier-push-apple.com.akadns.net → HOST-SUFFIX（覆盖
+#      1.courier-push-apple.com.akadns.net 等实际出现的名字）。
+#   2. 5 个 IPv4 + 4 个 IPv6 段与 Apple 官方列表逐条核对，完全一致，未改动。
+#   3. 头部表述修正（见上）+ 补充端口、MITM、节点稳定性三条注意事项。
+#
+# 【⚠ 一个需要实测的观察项（v2.0 新增，不影响推送主路径）】
+#   实测（2026-09-29，DoH ECS = 中国大陆）：init-*-lb.push-apple.com.akadns.net
+#   在大陆解析到【金山云 CDN】：
+#     init-p01md-lb.push-apple.com.akadns.net
+#       → init-p01md-cn.push-apple.com.akadns.net
+#       → init-p01md.apple.com.download.ks-cdn.com
+#       → k128-mzstatic.gslb.ksyuncdn.com
+#   而真正的推送长连接走的是 N-courier.push.apple.com：
+#     1-courier.push.apple.com
+#       → 1.courier-push-apple.com.akadns.net
+#       → apac-asia-courier-4.push-apple.com.akadns.net
+#       → 17.57.145.133   ← 落在官方 17.57.144.0/22 内
+#   ⟹ init-* 是 APNs 的「初始化资源」步骤，由 Apple 的大陆 CDN 承载，本身没被墙；
+#     把 init-* 也代理到海外，理论上会让这一步改用海外 CDN、变慢。
+#   保留它的理由：作者原意是「APNs 全域走代理」，且在没有 iOS 设备的情况下
+#   无法验证移除是否影响推送 —— 按「不改无法验证的行为」原则保留。
+#   如果你实测发现推送正常、但 App 启动 / 推送注册变慢，可以注释掉
+#   `HOST-SUFFIX,push-apple.com.akadns.net,proxy` 那一行；
+#   N-courier.push.apple.com 由上面第一条规则单独覆盖，不受影响。
+#
+# 【⚠ 与本机配置的联动】若 QX 开着 no-ipv6（本仓库使用者的配置即是），
+#   下面的 IP6-CIDR 规则不会生效（AAAA 查询直接失败），属预期，保留无害。
+# ============================================================
 
 # --- APNs 推送域名（走代理）---
+# N-courier.push.apple.com 等承载推送长连接。
+# 注意 push.apple.com 本身【无 A 记录】，只有 N-courier.* 这类子域有，
+# 因此必须用 HOST-SUFFIX 而不是 HOST。
 HOST-SUFFIX,push.apple.com,proxy
-# Akamai 上的 APNs 专用 CNAME（精确匹配，避免波及其他 Akamai 服务）
-HOST,push-apple.com.akadns.net,proxy
-HOST,courier-push-apple.com.akadns.net,proxy
-HOST,init-p01st-lb.push-apple.com.akadns.net,proxy
-HOST,init-p01md-lb.push-apple.com.akadns.net,proxy
-HOST,init-s01st-lb.push-apple.com.akadns.net,proxy
+
+# Akamai 上的 APNs 专用域：init 初始化资源 + courier 的 CNAME 目标
+HOST-SUFFIX,push-apple.com.akadns.net,proxy
+HOST-SUFFIX,courier-push-apple.com.akadns.net,proxy
+
 # 如启用后推送仍异常，可解开下面两行（较激进，会波及其他 Akamai / Edgekey 托管服务）
 # HOST-SUFFIX,akadns.net,proxy
 # HOST-KEYWORD,apple.com.edgekey.net,proxy
 
 # --- APNs IPv4 网段（走代理，no-resolve）---
+# 与 Apple 官方列表完全一致：
+#   17.249.0.0/16  17.252.0.0/16  17.57.144.0/22  17.188.128.0/18  17.188.20.0/23
+# 说明：no-resolve 表示「不为了匹配本规则而额外做 DNS 解析」。
+#   · 设备用域名连（N-courier.push.apple.com）→ 由上面的 HOST-SUFFIX 命中；
+#   · 设备用缓存 IP 直连 → 由下面这些 IP-CIDR 命中。
+#   两条路径都覆盖，这正是域名规则与 IP 规则并存的原因。
 IP-CIDR,17.249.0.0/16,proxy,no-resolve
 IP-CIDR,17.252.0.0/16,proxy,no-resolve
 IP-CIDR,17.57.144.0/22,proxy,no-resolve
@@ -30,6 +101,7 @@ IP-CIDR,17.188.128.0/18,proxy,no-resolve
 IP-CIDR,17.188.20.0/23,proxy,no-resolve
 
 # --- APNs IPv6 网段（走代理，no-resolve）---
+# 与 Apple 官方列表完全一致
 IP6-CIDR,2620:149:a44::/48,proxy,no-resolve
 IP6-CIDR,2403:300:a42::/48,proxy,no-resolve
 IP6-CIDR,2403:300:a51::/48,proxy,no-resolve

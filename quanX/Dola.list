@@ -1,12 +1,51 @@
-# Quantumult X - Dola / Cici (豆包海外版) 分流规则
-# 应用：Dola（原 Cici，包名 com.larus.wolf，开发商 SPRING (SG) PTE. LTD. / 字节跳动海外 AI 助手）
-# 背景：该应用区域锁定，仅限海外使用；中国大陆直连会被区域限制拦截，必须走海外节点。
-#       开发主体在新加坡，后端跑在字节火山引擎 + OpenAI GPT / Google Gemini，
-#       建议在 proxy 策略组内优先选择【新加坡】节点。
-# 用法：本文件已按域名写入 proxy / REJECT，请勿在 [filter_remote] 再设置 force-policy。
+# ============================================================
+# Quantumult X 规则集 · Dola / Cici（豆包海外版）
+# 文件：quanX/Dola.list        版本：v2.0        更新：2026-09-29
+# 仓库：https://github.com/USCZ/Rule
+# ------------------------------------------------------------
+# 【应用】Dola（原 Cici，包名 com.larus.wolf）
+#   开发商 SPRING (SG) PTE. LTD.，字节跳动面向海外的 AI 助手（豆包国际版）。
+#   区域锁定，仅限海外；大陆直连会被区域限制拦截，必须走海外节点。
+#
+# 【⚠ 本文件混合了 proxy 与 REJECT —— 两条必须知道的后果】
+#   1. 【不要给本文件加 force-policy】
+#      QX 的 force-policy 会【取代】文件内每一行的策略。加上的瞬间，
+#      下面 4 条 REJECT 会一起变成代理 —— 拦截失效，还白耗节点连接数。
+#      （官方文档措辞「如果远程分流文件中已经指明则此处可忽略」有歧义，
+#        但社区共识与上游文件普遍警告一致：force-policy 会覆盖内部策略。）
+#   2. 【若你确实需要统一策略（例如固定走「特殊节点」）】
+#      请在【本地 [filter_local]】把这 4 条补回来，本地规则优先于远程：
+#        host-suffix, appsflyersdk.com, reject
+#        host-suffix, app-analytics-services.com, reject
+#        host-suffix, ibytedapm.com, reject
+#        host, log-report.volcvideos.com, reject
+#      （这样即使加了 force-policy，拦截依然生效。）
+#
+# 【节点选择】建议新加坡 —— 开发主体在新加坡，后端跑在字节火山引擎 +
+#   OpenAI GPT / Google Gemini。用内置 proxy 时，把主界面节点选成新加坡即可。
+#
+# 【v2.0 相对 v1 的修订】规则 13 → 14
+#   1. 【补齐 cici.com】—— v1 只写了 ciciai.com，漏了 cici.com。
+#      实测（2026-09-29）：cici.com 与 www.ciciai.com 解析到同一组 Akamai IP
+#      （cici.com.edgesuite.net → a379.t.akamai.net → 23.46.155.2xx），
+#      且 cici.com 就是 Dola 当前的官方站点
+#      （https://www.cici.com/ 标题「Dola, your AI assistant.」）。
+#      只写 ciciai.com 会让访问 cici.com 的请求落到 final。
+#   2. 头部补齐「force-policy 会消灭 REJECT 时怎么办」（见上）。
+#      原头部只写了一句「请勿设置 force-policy」，没说原因、也没给替代方案。
+#   3. REJECT 段补充说明：这 4 个都是【第三方通用】域名，不是 Dola 专属（见下方）。
+#
+# 【未收录的候选域名（观察项：已核查，但证据不足，故不加）】
+#   · dola.ai     → HTTP 200 但仅 114 字节的占位页，无法确认归属
+#   · cici.ai     → HTTP 436，无法确认归属
+#   · dola.com.cn → 域名已过期，解析到 overdue.aliyun.com（阿里云过期域名页）
+#   · byteintl.com → 域名存在（apex 无 A 记录），但与 byteintl.net 是否同用途未验证
+#   · volces.com   → 火山引擎主域，本文件刻意排除（避免影响国内火山引擎服务）
+# ============================================================
 
 # --- Dola / Cici 核心服务（走代理，建议新加坡节点）---
 HOST-SUFFIX,dola.com,proxy
+HOST-SUFFIX,cici.com,proxy
 HOST-SUFFIX,ciciai.com,proxy
 
 # --- 字节跳动海外基础设施 / 配置 / 存储 / CDN（仅海外解析，走代理）---
@@ -18,10 +57,23 @@ HOST-SUFFIX,ibyteimg.com,proxy
 HOST-SUFFIX,bytefcdn-oversea.com,proxy
 
 # --- 火山引擎 Volcengine 媒体后端（音视频，走代理）---
-# 注意：仅放行 volcvideo（媒体），不放行 volces.com 等火山主域，避免影响国内火山引擎服务。
+# 仅放行 volcvideo（媒体），不放行 volces.com 等火山主域，避免影响国内火山引擎服务。
 HOST-SUFFIX,volcvideo.com,proxy
 
-# --- 追踪 / 分析 / 崩溃上报（建议拦截，不影响核心功能）---
+# --- 追踪 / 分析 / 崩溃上报（拦截，不影响核心功能）---
+# ⚠ 以下 4 个都是【第三方通用】域名，不是 Dola 专属：
+#   · appsflyersdk.com            AppsFlyer 归因 SDK —— 被大量 App 使用
+#   · app-analytics-services.com  Google Firebase Analytics
+#                                 （已由 firebase-ios-sdk issue #12720 确认归属 Google，
+#                                   不是 Apple 的域名 —— 别被名字误导）
+#   · ibytedapm.com               字节 APM（崩溃 / 性能上报）
+#   · log-report.volcvideos.com   字节日志上报
+#     注意是 volcvideos【复数】，与上面走代理的 volcvideo【单数】不是一个域名。
+#     实测只有 log-report 这一个子域存在（log. / report. / api.volcvideos.com
+#     均 NXDOMAIN），故用 HOST 精确匹配而非 HOST-SUFFIX —— 避免误伤未来可能
+#     出现的同名兄弟域。
+#   拦截它们会同时影响其它使用同一 SDK 的 App。对本仓库的用途（去广告 / 隐私）
+#   而言这是期望行为；若你依赖某个 App 的归因统计，可把对应行改为 proxy。
 HOST-SUFFIX,appsflyersdk.com,REJECT
 HOST-SUFFIX,app-analytics-services.com,REJECT
 HOST-SUFFIX,ibytedapm.com,REJECT
