@@ -218,6 +218,19 @@ v1 只写了 `ciciai.com`，漏了 `cici.com`。实测（2026-09-29）：`cici.c
 > host-suffix, ibytedapm.com, reject
 > host, log-report.volcvideos.com, reject
 > ```
+>
+> **✅ 已实测证实（2026-09-29）**：在 QX「分流规则」页搜 `appsflyersdk`，本文件那条显示为
+> **「特殊节点」而非 `REJECT`** → `force-policy` 确实会**覆盖**规则集内部的策略。
+> 官方文档「如果远程分流文件中已经指明则此处可忽略」的措辞有歧义，此处以实测为准。
+> 反过来说：**只要使用者加了 `force-policy`，本文件下方那 4 条 `REJECT` 就是死规则**，
+> 必须靠上面这段本地补回才能生效。
+
+> **🔎 实测时的一个副产品（值得所有 QX 用户知悉）**：同一次搜索暴露出 `appsflyersdk` 在本机
+> 共有 **3 个拦截源** —— 本地规则 / 本文件 / 第三方 **Loon 插件**（kelee `BlockAdvertisers.lpx`）。
+> 最后那个的原理是：Loon 插件的 `[Rule]` 段会被 QX 的解析器（`opt-parser=true`）
+> **转换成真正的分流规则**注入 QX。也就是说，**你以为只是「去广告重写」的资源也在改路由**，
+> 而 `[rewrite_remote]` 条目**没有 `force-policy` 可用来约束它**（该字段只作用于 `[filter_remote]`）。
+> 排查「某域名为什么走了奇怪的策略」时，请务必在「分流规则」页留意 tag 是插件名的条目。
 
 **未收录的候选域名（观察项：已核查，但证据不足，故不加）**
 
@@ -372,6 +385,14 @@ rules:
 - **改正头部表述**：v1 直接写「请勿设置 force-policy」，那是照抄混合策略文件的模板 —— 本文件全 `proxy`，加 `force-policy` 是**安全**的，原表述会让使用者误以为必须放弃统一策略组。
 - 补充端口（5223 主 / 443·2197 回落）、`no-resolve` 与域名规则并存的原因、以及「为何不用整个 `17.0.0.0/8`」。
 - 记录一个**观察项**：`init-*-lb.push-apple.com.akadns.net` 在大陆解析到**金山云 CDN**（`*.apple.com.download.ks-cdn.com`），属 APNs 初始化步骤、本身没被墙；真正被墙的是 `N-courier.push.apple.com`。
+
+**Dola.list v2.1** —— 规则条数不变（**14 条**），仅文档升级：
+
+- 把「`force-policy` 会覆盖规则集内部策略」从「社区共识 / 官方措辞有歧义」**升级为已实测证实**：
+  在 QX「分流规则」页搜 `appsflyersdk`，本文件那条显示为**「特殊节点」而非 `REJECT`**。
+- 附带发现：同一次搜索暴露出 `appsflyersdk` 在本机共有 **3 个拦截源**，其中一个来自
+  第三方 **Loon 插件**（`BlockAdvertisers.lpx`）—— 其 `[Rule]` 段被 QX 解析器**注入成分流规则**。
+  即使本文件的 `REJECT` 被 `force-policy` 覆盖，拦截仍可能由其它来源兜住，**但那是巧合、不可依赖**。
 
 **Dola.list v2.0** —— 规则 13 → **14 条（10 `proxy` + 4 `REJECT`）**：
 
