@@ -1,6 +1,6 @@
 # ============================================================
 # Quantumult X 规则集 · 港美股券商 + 香港金融（混合分流）
-# 文件：quanX/HK_Finance.list        版本：v2.1        更新：2026-09-29
+# 文件：quanX/HK_Finance.list        版本：v2.2        更新：2026-09-29
 # 仓库：https://github.com/USCZ/Rule
 # ------------------------------------------------------------
 # 【用途】
@@ -33,6 +33,21 @@
 #   ⟹ 券商【交易 / 行情 / 登录 / 资金】一律走 proxy；
 #      银行 / 支付 / 监管官网走 DIRECT（不受此次整治影响，直连更稳更快）。
 #
+# 【v2.2 相对 v2.1 的修订】规则 338 → 344（新增 6 条纯 IP 兜底）
+#   1. 【语法规范化】规则类型与策略名全部改为小写（HOST-SUFFIX → host-suffix、
+#      DIRECT → direct），与 QX 官方 sample.conf 的写法一致。
+#      原因：本文件原先混用「大写 DIRECT + 小写 proxy」，而 QX 官方示例、
+#      以及使用者配置里的其余规则一律小写。虽然 QX 大概率不区分大小写，
+#      但「同一文件内两种写法」本身就是隐患 —— 万一某个版本对大写不友好，
+#      受影响的会是全部 142 条 direct 规则（银行 / 交易所 / 致富），
+#      而且现象是「静默失效」，极难排查。规范化后该风险归零。
+#   2. 【新增 1-1 节的纯 IP 请求兜底】6 条 ip-cidr /32 → direct。
+#      依据：QX 官方 sample.conf 明确注释「Pure IP requests won't be matched
+#      by the host related rules.」。交易 App 常硬编码 IP 连接行情/交易服务器，
+#      这类请求不经过域名 → 所有 host-* 规则失效 → 落到 final → 走代理，
+#      与「整个 App 走 proxy」后果相同（VPN 检测失败、变慢）。
+#      取值 = 2026-09-29 实测各致富域名的解析结果，用 /32 精确匹配（见 1-1 节注释）。
+#
 # 【v2.1 相对 v1 的修订】规则总数 451 → 338
 #   1. 删除原第六节的 43 条 /23、/24 网段，只保留 20 条 /32 精确主机。
 #      被删段中含腾讯云【大陆】段 —— 详见文件末尾「关于 IP 段」。
@@ -61,37 +76,67 @@
 # ============================================================
 # --- 主品牌域 + KEYWORD 兜底 ---
 
-HOST-SUFFIX,chiefgroup.com.hk,DIRECT
-HOST-SUFFIX,chiefgroup.com,DIRECT
-HOST-SUFFIX,chieftrade.com,DIRECT
-HOST-SUFFIX,chiefsecurities.com.hk,DIRECT
-HOST-SUFFIX,chief.com.hk,DIRECT
-HOST-SUFFIX,chief-sec.com.hk,DIRECT
-HOST-SUFFIX,cm-chiefgroup.com,DIRECT
-HOST-SUFFIX,zft2000.com,DIRECT
-HOST-SUFFIX,zft2025.com,DIRECT
-HOST-SUFFIX,chieftrader1979.com,DIRECT
-HOST-SUFFIX,toptrader1979.com,DIRECT
-HOST-SUFFIX,cg1979.com,DIRECT
-HOST-SUFFIX,chiefquote.com,DIRECT
-HOST-SUFFIX,chiefquote.com.hk,DIRECT
-HOST-SUFFIX,chief-quote.com,DIRECT
-HOST-SUFFIX,chief-website.oss-cn-hongkong.aliyuncs.com,DIRECT
-HOST-SUFFIX,chiefgroup.udeskglobal.com,DIRECT
-HOST-SUFFIX,megahubhk.com,DIRECT
-HOST-KEYWORD,chiefgroup,DIRECT
-HOST-KEYWORD,chieftrade,DIRECT
-HOST-KEYWORD,chiefsecurities,DIRECT
-HOST-KEYWORD,chief-sec,DIRECT
-HOST-KEYWORD,megahubhk,DIRECT
-HOST-KEYWORD,zft2000,DIRECT
-HOST-KEYWORD,zft2025,DIRECT
-HOST-KEYWORD,cg1979,DIRECT
-HOST-KEYWORD,toptrader1979,DIRECT
-HOST-KEYWORD,chieftrader1979,DIRECT
-HOST-SUFFIX,engagelab.com,DIRECT
-HOST-KEYWORD,engagelab,DIRECT
-HOST-SUFFIX,uba.ap-southeast-1.volces.com,DIRECT
+host-suffix,chiefgroup.com.hk,direct
+host-suffix,chiefgroup.com,direct
+host-suffix,chieftrade.com,direct
+host-suffix,chiefsecurities.com.hk,direct
+host-suffix,chief.com.hk,direct
+host-suffix,chief-sec.com.hk,direct
+host-suffix,cm-chiefgroup.com,direct
+host-suffix,zft2000.com,direct
+host-suffix,zft2025.com,direct
+host-suffix,chieftrader1979.com,direct
+host-suffix,toptrader1979.com,direct
+host-suffix,cg1979.com,direct
+host-suffix,chiefquote.com,direct
+host-suffix,chiefquote.com.hk,direct
+host-suffix,chief-quote.com,direct
+host-suffix,chief-website.oss-cn-hongkong.aliyuncs.com,direct
+host-suffix,chiefgroup.udeskglobal.com,direct
+host-suffix,megahubhk.com,direct
+host-keyword,chiefgroup,direct
+host-keyword,chieftrade,direct
+host-keyword,chiefsecurities,direct
+host-keyword,chief-sec,direct
+host-keyword,megahubhk,direct
+host-keyword,zft2000,direct
+host-keyword,zft2025,direct
+host-keyword,cg1979,direct
+host-keyword,toptrader1979,direct
+host-keyword,chieftrader1979,direct
+host-suffix,engagelab.com,direct
+host-keyword,engagelab,direct
+host-suffix,uba.ap-southeast-1.volces.com,direct
+
+# --- 纯 IP 请求兜底（v2.2 新增）------------------------------------------
+# 【为什么需要这一段】QX 官方 sample.conf 在 [filter_local] 里明确注释：
+#   「Pure IP requests won't be matched by the host related rules.」
+#   （纯 IP 请求不会被 host 类规则匹配）
+# 交易类 App 常把行情/交易服务器硬编码为 IP，或复用已解析的 IP 直连。
+# 这类请求不经过域名 → 上面所有 host-* 规则全部失效 → 落到 final → 走代理，
+# 结果与「整个 App 走 proxy」相同：App 的 VPN 检测失败、速度慢 —— 正是本文件要避免的。
+#
+# 【取值依据】2026-09-29 实测各致富域名解析结果（DoH，ECS = 中国大陆）：
+#   chiefgroup.com.hk           → 113.28.95.37      PCCW，org = Chief Commodities Limited
+#   www.chiefgroup.com.hk       → 210.177.22.226    HKT
+#   api.chiefgroup.com.hk       → 59.152.220.103    HKBNES
+#   chieftrade.com              → 59.152.220.99     HKBNES
+#   speedweb.chiefgroup.com.hk  → 59.152.222.39     HKBNES
+#   toptrader.chiefgroup.com.hk → 175.45.6.4        HKBNES
+#
+# ⚠ 为什么用 /32 而不是 /24：已核实这些都不是致富专属段 ——
+#   113.28.95.0/24 是 PCCW 共享段（同段还有 K Line / Hakuto / AZ Electronic Materials
+#   等公司），59.152.220.0/24 与 59.152.222.0/24 是 HKBNES 共享段。
+#   写 /24 会把这些无关企业的流量一并变成直连，属于误伤。
+# ⚠ 局限：若 App 使用 IP 池或轮换 IP，本段只能覆盖已观测到的地址。
+#   如果你确认 App 全程用域名访问（QX「网络活动」里看不到裸 IP 连接），
+#   本段可整体删除，不影响任何功能。
+ip-cidr,113.28.95.37/32,direct,no-resolve
+ip-cidr,210.177.22.226/32,direct,no-resolve
+ip-cidr,59.152.220.103/32,direct,no-resolve
+ip-cidr,59.152.220.99/32,direct,no-resolve
+ip-cidr,59.152.222.39/32,direct,no-resolve
+ip-cidr,175.45.6.4/32,direct,no-resolve
 
 # --- 显式子域规则：已删除 ---
 # v1 在此写了 72 条 HOST,api./cdn./quote./service.…chiefgroup.com.hk 显式规则，
@@ -105,142 +150,142 @@ HOST-SUFFIX,uba.ap-southeast-1.volces.com,DIRECT
 # 1-2  香港虚拟银行 · ZA / Airstar 天星 / WeLab 汇立 / Mox / livi / PAOb / Fusion
 # ============================================================
 
-HOST-SUFFIX,za.group,DIRECT
-HOST-SUFFIX,zabank.com.hk,DIRECT
-HOST-SUFFIX,zaintl.com,DIRECT
-HOST-SUFFIX,zaapi.com,DIRECT
-HOST-KEYWORD,zabank,DIRECT
-HOST-KEYWORD,za-bank,DIRECT
-HOST-KEYWORD,zaintl,DIRECT
-HOST-SUFFIX,airstarbank.com,DIRECT
-HOST-SUFFIX,airstarbank.com.hk,DIRECT
-HOST-KEYWORD,airstar,DIRECT
-HOST-SUFFIX,welab.co,DIRECT
-HOST-SUFFIX,welab.bank,DIRECT
-HOST-SUFFIX,welab.com,DIRECT
-HOST-SUFFIX,welab.com.hk,DIRECT
-HOST-SUFFIX,welabgroup.com,DIRECT
-HOST-SUFFIX,welabgroup.com.hk,DIRECT
-HOST-SUFFIX,welab-bank.com,DIRECT
-HOST-SUFFIX,welab-bank.com.hk,DIRECT
-HOST-KEYWORD,welab,DIRECT
+host-suffix,za.group,direct
+host-suffix,zabank.com.hk,direct
+host-suffix,zaintl.com,direct
+host-suffix,zaapi.com,direct
+host-keyword,zabank,direct
+host-keyword,za-bank,direct
+host-keyword,zaintl,direct
+host-suffix,airstarbank.com,direct
+host-suffix,airstarbank.com.hk,direct
+host-keyword,airstar,direct
+host-suffix,welab.co,direct
+host-suffix,welab.bank,direct
+host-suffix,welab.com,direct
+host-suffix,welab.com.hk,direct
+host-suffix,welabgroup.com,direct
+host-suffix,welabgroup.com.hk,direct
+host-suffix,welab-bank.com,direct
+host-suffix,welab-bank.com.hk,direct
+host-keyword,welab,direct
 
 # ============================================================
 # 1-3  香港虚拟银行 · 蚂蚁银行 Ant Bank HK + AlipayHK
 # ============================================================
 
-HOST-SUFFIX,mox.com,DIRECT
-HOST-SUFFIX,mox.com.hk,DIRECT
-HOST-SUFFIX,moxbank.com,DIRECT
-HOST-SUFFIX,moxbank.com.hk,DIRECT
-HOST-SUFFIX,livi.bank,DIRECT
-HOST-SUFFIX,livi.com.hk,DIRECT
-HOST-SUFFIX,livibank.com,DIRECT
-HOST-SUFFIX,livibank.com.hk,DIRECT
-HOST-SUFFIX,paob.com.hk,DIRECT
-HOST-SUFFIX,pinganoneconnectbank.com,DIRECT
-HOST-SUFFIX,fusionbank.com,DIRECT
-HOST-SUFFIX,fusionbank.com.hk,DIRECT
-HOST-SUFFIX,fusionbanking.com,DIRECT
-HOST-KEYWORD,moxbank,DIRECT
-HOST-KEYWORD,paob,DIRECT
-HOST-KEYWORD,fusionbank,DIRECT
+host-suffix,mox.com,direct
+host-suffix,mox.com.hk,direct
+host-suffix,moxbank.com,direct
+host-suffix,moxbank.com.hk,direct
+host-suffix,livi.bank,direct
+host-suffix,livi.com.hk,direct
+host-suffix,livibank.com,direct
+host-suffix,livibank.com.hk,direct
+host-suffix,paob.com.hk,direct
+host-suffix,pinganoneconnectbank.com,direct
+host-suffix,fusionbank.com,direct
+host-suffix,fusionbank.com.hk,direct
+host-suffix,fusionbanking.com,direct
+host-keyword,moxbank,direct
+host-keyword,paob,direct
+host-keyword,fusionbank,direct
 
 # ============================================================
 # 1-4  香港传统银行 · 汇丰 HSBC / 恒生 Hang Seng
 # ============================================================
 
-HOST-SUFFIX,antbank.hk,DIRECT
-HOST-SUFFIX,antbank.com.hk,DIRECT
-HOST-SUFFIX,antgroup.com,DIRECT
-HOST-SUFFIX,antfin.com,DIRECT
-HOST-SUFFIX,alipayhk.com,DIRECT
-HOST-SUFFIX,alipay.hk,DIRECT
-HOST-SUFFIX,mybank.cn,DIRECT
-HOST-KEYWORD,antbank,DIRECT
-HOST-KEYWORD,ant-bank,DIRECT
-HOST-KEYWORD,antgroup,DIRECT
-HOST-KEYWORD,alipayhk,DIRECT
-HOST-SUFFIX,hsbc.com.hk,DIRECT
-HOST-SUFFIX,hsbc.com,DIRECT
-HOST-SUFFIX,hsbcnet.com,DIRECT
-HOST-SUFFIX,hsbcprivatebank.com,DIRECT
-HOST-SUFFIX,hsbcamanah.com,DIRECT
-HOST-SUFFIX,hsbc.com.cn,DIRECT
-HOST-SUFFIX,hsbc.com.sg,DIRECT
-HOST-SUFFIX,hsbchk.com,DIRECT
-HOST-SUFFIX,hangseng.com,DIRECT
-HOST-SUFFIX,hangseng.com.hk,DIRECT
-HOST-KEYWORD,hsbc,DIRECT
-HOST-KEYWORD,hangseng,DIRECT
+host-suffix,antbank.hk,direct
+host-suffix,antbank.com.hk,direct
+host-suffix,antgroup.com,direct
+host-suffix,antfin.com,direct
+host-suffix,alipayhk.com,direct
+host-suffix,alipay.hk,direct
+host-suffix,mybank.cn,direct
+host-keyword,antbank,direct
+host-keyword,ant-bank,direct
+host-keyword,antgroup,direct
+host-keyword,alipayhk,direct
+host-suffix,hsbc.com.hk,direct
+host-suffix,hsbc.com,direct
+host-suffix,hsbcnet.com,direct
+host-suffix,hsbcprivatebank.com,direct
+host-suffix,hsbcamanah.com,direct
+host-suffix,hsbc.com.cn,direct
+host-suffix,hsbc.com.sg,direct
+host-suffix,hsbchk.com,direct
+host-suffix,hangseng.com,direct
+host-suffix,hangseng.com.hk,direct
+host-keyword,hsbc,direct
+host-keyword,hangseng,direct
 
 # ============================================================
 # 1-5  其他香港 / 在港银行与支付
 # ============================================================
 
-HOST-SUFFIX,bochk.com,DIRECT
-HOST-SUFFIX,bochk.com.hk,DIRECT
-HOST-SUFFIX,bochk.com.mo,DIRECT
-HOST-SUFFIX,bochkonline.com,DIRECT
-HOST-SUFFIX,jpmorgan.com,DIRECT
-HOST-SUFFIX,jpmorganchase.com,DIRECT
-HOST-SUFFIX,citibank.com.hk,DIRECT
-HOST-SUFFIX,citi.com.hk,DIRECT
-HOST-SUFFIX,citi.com,DIRECT
-HOST-SUFFIX,sc.com.hk,DIRECT
-HOST-SUFFIX,standardchartered.com.hk,DIRECT
-HOST-SUFFIX,standardchartered.com,DIRECT
-HOST-SUFFIX,dbs.com.hk,DIRECT
-HOST-SUFFIX,dbs.com,DIRECT
-HOST-SUFFIX,dbs.com.sg,DIRECT
-HOST-SUFFIX,bankcomm.com.hk,DIRECT
-HOST-SUFFIX,hk.bankcomm.com,DIRECT
-HOST-SUFFIX,dahsing.com,DIRECT
-HOST-SUFFIX,dahsing.com.hk,DIRECT
-HOST-SUFFIX,bankofeastasia.com,DIRECT
-HOST-SUFFIX,hkbea.com,DIRECT
-HOST-SUFFIX,cncbinternational.com,DIRECT
-HOST-SUFFIX,ccb.com.hk,DIRECT
-HOST-SUFFIX,asia.ccb.com,DIRECT
-HOST-SUFFIX,cmbwinglungbank.com,DIRECT
-HOST-SUFFIX,winglungbank.com,DIRECT
-HOST-SUFFIX,publicbank.com.hk,DIRECT
-HOST-SUFFIX,ocbc.com.hk,DIRECT
-HOST-SUFFIX,ocbc.com,DIRECT
-HOST-SUFFIX,aeon.com.hk,DIRECT
-HOST-SUFFIX,octopus.com.hk,DIRECT
-HOST-KEYWORD,bochk,DIRECT
-HOST-KEYWORD,bankcomm,DIRECT
-HOST-KEYWORD,dahsing,DIRECT
-HOST-KEYWORD,hkbea,DIRECT
-HOST-KEYWORD,cncbinternational,DIRECT
-HOST-KEYWORD,cmbwinglung,DIRECT
+host-suffix,bochk.com,direct
+host-suffix,bochk.com.hk,direct
+host-suffix,bochk.com.mo,direct
+host-suffix,bochkonline.com,direct
+host-suffix,jpmorgan.com,direct
+host-suffix,jpmorganchase.com,direct
+host-suffix,citibank.com.hk,direct
+host-suffix,citi.com.hk,direct
+host-suffix,citi.com,direct
+host-suffix,sc.com.hk,direct
+host-suffix,standardchartered.com.hk,direct
+host-suffix,standardchartered.com,direct
+host-suffix,dbs.com.hk,direct
+host-suffix,dbs.com,direct
+host-suffix,dbs.com.sg,direct
+host-suffix,bankcomm.com.hk,direct
+host-suffix,hk.bankcomm.com,direct
+host-suffix,dahsing.com,direct
+host-suffix,dahsing.com.hk,direct
+host-suffix,bankofeastasia.com,direct
+host-suffix,hkbea.com,direct
+host-suffix,cncbinternational.com,direct
+host-suffix,ccb.com.hk,direct
+host-suffix,asia.ccb.com,direct
+host-suffix,cmbwinglungbank.com,direct
+host-suffix,winglungbank.com,direct
+host-suffix,publicbank.com.hk,direct
+host-suffix,ocbc.com.hk,direct
+host-suffix,ocbc.com,direct
+host-suffix,aeon.com.hk,direct
+host-suffix,octopus.com.hk,direct
+host-keyword,bochk,direct
+host-keyword,bankcomm,direct
+host-keyword,dahsing,direct
+host-keyword,hkbea,direct
+host-keyword,cncbinternational,direct
+host-keyword,cmbwinglung,direct
 
 # ============================================================
 # 1-6  交易所 / 监管公开站点
 # ============================================================
 
-HOST-SUFFIX,hkex.com.hk,DIRECT
-HOST-SUFFIX,hkexnews.hk,DIRECT
-HOST-SUFFIX,hkma.gov.hk,DIRECT
-HOST-SUFFIX,sfc.hk,DIRECT
-HOST-KEYWORD,hkex,DIRECT
+host-suffix,hkex.com.hk,direct
+host-suffix,hkexnews.hk,direct
+host-suffix,hkma.gov.hk,direct
+host-suffix,sfc.hk,direct
+host-keyword,hkex,direct
 
 # ============================================================
 # 1-7  券商用的大陆 A 股行情源（多已被 geoip, cn 覆盖，此处显式声明）
 # ============================================================
 
-HOST-SUFFIX,sseinfo.com,DIRECT
-HOST-SUFFIX,sse.com.cn,DIRECT
-HOST-SUFFIX,szse.cn,DIRECT
-HOST-SUFFIX,szse.com,DIRECT
-HOST-SUFFIX,eastmoney.com,DIRECT
-HOST-SUFFIX,quote.eastmoney.com,DIRECT
-HOST-SUFFIX,dfcfw.com,DIRECT
-HOST-SUFFIX,emquant.com,DIRECT
-HOST-SUFFIX,10jqka.com.cn,DIRECT
-HOST-SUFFIX,hexin.cn,DIRECT
-HOST-SUFFIX,hexin.com,DIRECT
+host-suffix,sseinfo.com,direct
+host-suffix,sse.com.cn,direct
+host-suffix,szse.cn,direct
+host-suffix,szse.com,direct
+host-suffix,eastmoney.com,direct
+host-suffix,quote.eastmoney.com,direct
+host-suffix,dfcfw.com,direct
+host-suffix,emquant.com,direct
+host-suffix,10jqka.com.cn,direct
+host-suffix,hexin.cn,direct
+host-suffix,hexin.com,direct
 
 
 # ############################################################
@@ -252,242 +297,242 @@ HOST-SUFFIX,hexin.com,DIRECT
 # 2-1  中资跨境互联网券商 · 富途 Futu / Futubull / moomoo  （受 6·12 影响最大，务必走 proxy）
 # ============================================================
 
-HOST-SUFFIX,futu.com,proxy
-HOST-SUFFIX,futu.cn,proxy
-HOST-SUFFIX,futu.link,proxy
-HOST-SUFFIX,futuhk.com,proxy
-HOST-SUFFIX,futuhk2.com,proxy
-HOST-SUFFIX,futuhkapp.com,proxy
-HOST-SUFFIX,futuhn.com,proxy
-HOST-SUFFIX,futunn.com,proxy
-HOST-SUFFIX,futunn.com.hk,proxy
-HOST-SUFFIX,futufin.com,proxy
-HOST-SUFFIX,futuholdings.com,proxy
-HOST-SUFFIX,futuinc.com,proxy
-HOST-SUFFIX,futuniuniu.com,proxy
-HOST-SUFFIX,futubull.cn,proxy
-HOST-SUFFIX,futuesop.com,proxy
-HOST-SUFFIX,futuchain.com,proxy
-HOST-SUFFIX,futuau.com,proxy
-HOST-SUFFIX,futustatic.com,proxy
-HOST-SUFFIX,fututrade.com,proxy
-HOST-SUFFIX,fututrustee.com,proxy
-HOST-SUFFIX,futu0.com,proxy
-HOST-SUFFIX,futu1.com,proxy
-HOST-SUFFIX,futu2.com,proxy
-HOST-SUFFIX,futu3.com,proxy
-HOST-SUFFIX,futu4.com,proxy
-HOST-SUFFIX,futu5.com,proxy
-HOST-SUFFIX,futu6.com,proxy
-HOST-SUFFIX,futu7.com,proxy
-HOST-SUFFIX,futu8.com,proxy
-HOST-SUFFIX,futu9.com,proxy
-HOST-SUFFIX,moomoo.com,proxy
-HOST-SUFFIX,moomoo.com.hk,proxy
-HOST-SUFFIX,moomooequity.com,proxy
-HOST-SUFFIX,moomootrustee.com,proxy
-HOST-SUFFIX,moomoobull.com,proxy
-HOST,shortconn.im.qcloud.com,proxy
-HOST,cg.play-analytics.com,proxy
-HOST,9oju31.launches.appsflyersdk.com,proxy
-HOST,sgqt0j.launches.appsflyersdk.com,proxy
-HOST-KEYWORD,futunn,proxy
-HOST-KEYWORD,futuhk,proxy
-HOST-KEYWORD,futufin,proxy
-HOST-KEYWORD,futuholdings,proxy
-HOST-KEYWORD,moomoo,proxy
-HOST-SUFFIX,futu.hk,proxy
+host-suffix,futu.com,proxy
+host-suffix,futu.cn,proxy
+host-suffix,futu.link,proxy
+host-suffix,futuhk.com,proxy
+host-suffix,futuhk2.com,proxy
+host-suffix,futuhkapp.com,proxy
+host-suffix,futuhn.com,proxy
+host-suffix,futunn.com,proxy
+host-suffix,futunn.com.hk,proxy
+host-suffix,futufin.com,proxy
+host-suffix,futuholdings.com,proxy
+host-suffix,futuinc.com,proxy
+host-suffix,futuniuniu.com,proxy
+host-suffix,futubull.cn,proxy
+host-suffix,futuesop.com,proxy
+host-suffix,futuchain.com,proxy
+host-suffix,futuau.com,proxy
+host-suffix,futustatic.com,proxy
+host-suffix,fututrade.com,proxy
+host-suffix,fututrustee.com,proxy
+host-suffix,futu0.com,proxy
+host-suffix,futu1.com,proxy
+host-suffix,futu2.com,proxy
+host-suffix,futu3.com,proxy
+host-suffix,futu4.com,proxy
+host-suffix,futu5.com,proxy
+host-suffix,futu6.com,proxy
+host-suffix,futu7.com,proxy
+host-suffix,futu8.com,proxy
+host-suffix,futu9.com,proxy
+host-suffix,moomoo.com,proxy
+host-suffix,moomoo.com.hk,proxy
+host-suffix,moomooequity.com,proxy
+host-suffix,moomootrustee.com,proxy
+host-suffix,moomoobull.com,proxy
+host,shortconn.im.qcloud.com,proxy
+host,cg.play-analytics.com,proxy
+host,9oju31.launches.appsflyersdk.com,proxy
+host,sgqt0j.launches.appsflyersdk.com,proxy
+host-keyword,futunn,proxy
+host-keyword,futuhk,proxy
+host-keyword,futufin,proxy
+host-keyword,futuholdings,proxy
+host-keyword,moomoo,proxy
+host-suffix,futu.hk,proxy
 
 # ============================================================
 # 2-2  中资跨境互联网券商 · 老虎证券 Tiger / 老虎国际 / TradeUp
 # ============================================================
 
-HOST-SUFFIX,itiger.com,proxy
-HOST-SUFFIX,itigerup.com,proxy
-HOST-SUFFIX,tigerbrokers.com,proxy
-HOST-SUFFIX,tigerbrokers.com.hk,proxy
-HOST-SUFFIX,tigerbrokers.net,proxy
-HOST-SUFFIX,tigerbrokers.nz,proxy
-HOST-SUFFIX,tigerfintech.com,proxy
-HOST-SUFFIX,tigerbbs.com,proxy
-HOST-SUFFIX,tigerbbs.cn,proxy
-HOST-SUFFIX,laohu8.com,proxy
-HOST-SUFFIX,xiaohu8.com,proxy
-HOST-SUFFIX,zhijianfengyi.com,proxy
-HOST-SUFFIX,zhijianfengyi.cn,proxy
-HOST-SUFFIX,tradeup.com,proxy
-HOST-KEYWORD,itiger,proxy
-HOST-KEYWORD,tigerbrokers,proxy
-HOST-KEYWORD,tigerfintech,proxy
-HOST-KEYWORD,laohu8,proxy
-HOST-KEYWORD,xiaohu8,proxy
-HOST-KEYWORD,zhijianfengyi,proxy
+host-suffix,itiger.com,proxy
+host-suffix,itigerup.com,proxy
+host-suffix,tigerbrokers.com,proxy
+host-suffix,tigerbrokers.com.hk,proxy
+host-suffix,tigerbrokers.net,proxy
+host-suffix,tigerbrokers.nz,proxy
+host-suffix,tigerfintech.com,proxy
+host-suffix,tigerbbs.com,proxy
+host-suffix,tigerbbs.cn,proxy
+host-suffix,laohu8.com,proxy
+host-suffix,xiaohu8.com,proxy
+host-suffix,zhijianfengyi.com,proxy
+host-suffix,zhijianfengyi.cn,proxy
+host-suffix,tradeup.com,proxy
+host-keyword,itiger,proxy
+host-keyword,tigerbrokers,proxy
+host-keyword,tigerfintech,proxy
+host-keyword,laohu8,proxy
+host-keyword,xiaohu8,proxy
+host-keyword,zhijianfengyi,proxy
 
 # ============================================================
 # 2-3  中资跨境互联网券商 · 长桥 Longbridge / LongPort
 # ============================================================
 
-HOST-SUFFIX,longbridge.com,proxy
-HOST-SUFFIX,longbridge.cn,proxy
-HOST-SUFFIX,longbridge.hk,proxy
-HOST-SUFFIX,longbridge.sg,proxy
-HOST-SUFFIX,longbridge.global,proxy
-HOST-SUFFIX,longbridge.cloud,proxy
-HOST-SUFFIX,longbridgeapp.com,proxy
-HOST-SUFFIX,longbridgehk.com,proxy
-HOST-SUFFIX,longportapp.com,proxy
-HOST-SUFFIX,longportapp.cn,proxy
-HOST-SUFFIX,lbkrs.com,proxy
-HOST-SUFFIX,lbctrl.com,proxy
-HOST-KEYWORD,longbridge,proxy
-HOST-KEYWORD,longport,proxy
+host-suffix,longbridge.com,proxy
+host-suffix,longbridge.cn,proxy
+host-suffix,longbridge.hk,proxy
+host-suffix,longbridge.sg,proxy
+host-suffix,longbridge.global,proxy
+host-suffix,longbridge.cloud,proxy
+host-suffix,longbridgeapp.com,proxy
+host-suffix,longbridgehk.com,proxy
+host-suffix,longportapp.com,proxy
+host-suffix,longportapp.cn,proxy
+host-suffix,lbkrs.com,proxy
+host-suffix,lbctrl.com,proxy
+host-keyword,longbridge,proxy
+host-keyword,longport,proxy
 
 # ============================================================
 # 2-4  中资跨境互联网券商 · 微牛 Webull
 # ============================================================
 
-HOST-SUFFIX,webull.com,proxy
-HOST-SUFFIX,webull.hk,proxy
-HOST-SUFFIX,webull.com.hk,proxy
-HOST-SUFFIX,wbrks.com,proxy
-HOST-KEYWORD,webull,proxy
+host-suffix,webull.com,proxy
+host-suffix,webull.hk,proxy
+host-suffix,webull.com.hk,proxy
+host-suffix,wbrks.com,proxy
+host-keyword,webull,proxy
 
 # ============================================================
 # 2-5  国际券商 · 盈透证券 IBKR
 # ============================================================
 
-HOST-SUFFIX,interactivebrokers.com,proxy
-HOST-SUFFIX,interactivebrokers.com.hk,proxy
-HOST-SUFFIX,interactivebrokers.co.uk,proxy
-HOST-SUFFIX,ibkr.com,proxy
-HOST-SUFFIX,ibkr.com.cn,proxy
-HOST-SUFFIX,ibkr.com.hk,proxy
-HOST-SUFFIX,ibkr.info,proxy
-HOST-SUFFIX,ibkrguides.com,proxy
-HOST-SUFFIX,ibllc.com,proxy
-HOST-KEYWORD,interactivebrokers,proxy
-HOST-KEYWORD,ibkr,proxy
-HOST-KEYWORD,ibllc,proxy
+host-suffix,interactivebrokers.com,proxy
+host-suffix,interactivebrokers.com.hk,proxy
+host-suffix,interactivebrokers.co.uk,proxy
+host-suffix,ibkr.com,proxy
+host-suffix,ibkr.com.cn,proxy
+host-suffix,ibkr.com.hk,proxy
+host-suffix,ibkr.info,proxy
+host-suffix,ibkrguides.com,proxy
+host-suffix,ibllc.com,proxy
+host-keyword,interactivebrokers,proxy
+host-keyword,ibkr,proxy
+host-keyword,ibllc,proxy
 
 # ============================================================
 # 2-6  国际券商 · 嘉信理财 Charles Schwab / TD Ameritrade
 # ============================================================
 
-HOST-SUFFIX,schwab.com,proxy
-HOST-SUFFIX,schwab.com.cn,proxy
-HOST-SUFFIX,schwab.com.hk,proxy
-HOST-SUFFIX,schwab.co.uk,proxy
-HOST-SUFFIX,schwabcdn.com,proxy
-HOST-SUFFIX,schwabplan.com,proxy
-HOST-SUFFIX,schwabassetmanagement.com,proxy
-HOST-SUFFIX,tdameritrade.com,proxy
-HOST-SUFFIX,thinkorswim.com,proxy
-HOST-KEYWORD,schwab,proxy
-HOST-KEYWORD,tdameritrade,proxy
-HOST-KEYWORD,thinkorswim,proxy
+host-suffix,schwab.com,proxy
+host-suffix,schwab.com.cn,proxy
+host-suffix,schwab.com.hk,proxy
+host-suffix,schwab.co.uk,proxy
+host-suffix,schwabcdn.com,proxy
+host-suffix,schwabplan.com,proxy
+host-suffix,schwabassetmanagement.com,proxy
+host-suffix,tdameritrade.com,proxy
+host-suffix,thinkorswim.com,proxy
+host-keyword,schwab,proxy
+host-keyword,tdameritrade,proxy
+host-keyword,thinkorswim,proxy
 
 # ============================================================
 # 2-7  国际券商 · Firstrade 第一证券
 # ============================================================
 
-HOST-SUFFIX,firstrade.com,proxy
-HOST-SUFFIX,firstrade-chinese.com,proxy
-HOST-KEYWORD,firstrade,proxy
+host-suffix,firstrade.com,proxy
+host-suffix,firstrade-chinese.com,proxy
+host-keyword,firstrade,proxy
 
 # ============================================================
 # 2-8  其他美资综合券商（不用可整块删除）
 # ============================================================
 
-HOST-SUFFIX,robinhood.com,proxy
-HOST-SUFFIX,fidelity.com,proxy
-HOST-SUFFIX,fidelity.com.hk,proxy
-HOST-SUFFIX,etrade.com,proxy
-HOST-SUFFIX,vanguard.com,proxy
-HOST-SUFFIX,tastytrade.com,proxy
-HOST-SUFFIX,tastyworks.com,proxy
-HOST-SUFFIX,merrilledge.com,proxy
-HOST-SUFFIX,ml.com,proxy
-HOST-SUFFIX,morganstanley.com,proxy
-HOST-KEYWORD,robinhood,proxy
-HOST-KEYWORD,tastytrade,proxy
+host-suffix,robinhood.com,proxy
+host-suffix,fidelity.com,proxy
+host-suffix,fidelity.com.hk,proxy
+host-suffix,etrade.com,proxy
+host-suffix,vanguard.com,proxy
+host-suffix,tastytrade.com,proxy
+host-suffix,tastyworks.com,proxy
+host-suffix,merrilledge.com,proxy
+host-suffix,ml.com,proxy
+host-suffix,morganstanley.com,proxy
+host-keyword,robinhood,proxy
+host-keyword,tastytrade,proxy
 
 # ============================================================
 # 2-9  SoFi
 # ============================================================
 
-HOST-SUFFIX,sofi.com,proxy
-HOST-SUFFIX,sofi.hk,proxy
-HOST-SUFFIX,sofi.com.hk,proxy
+host-suffix,sofi.com,proxy
+host-suffix,sofi.hk,proxy
+host-suffix,sofi.com.hk,proxy
 
 # ============================================================
 # 2-10  BBAE 必贝（复星系，美股）
 # ============================================================
 
-HOST-SUFFIX,bbae.com,proxy
-HOST-SUFFIX,bbae.com.hk,proxy
-HOST-SUFFIX,bbae.net,proxy
-HOST-KEYWORD,bbae,proxy
+host-suffix,bbae.com,proxy
+host-suffix,bbae.com.hk,proxy
+host-suffix,bbae.net,proxy
+host-keyword,bbae,proxy
 
 # ============================================================
 # 2-11  香港本地券商 · 耀才 Bright Smart
 # ============================================================
 
-HOST-SUFFIX,brightsmart.com.hk,proxy
-HOST-SUFFIX,bsgroup.com.hk,proxy
-HOST-KEYWORD,brightsmart,proxy
+host-suffix,brightsmart.com.hk,proxy
+host-suffix,bsgroup.com.hk,proxy
+host-keyword,brightsmart,proxy
 
 # ============================================================
 # 2-12  香港本地券商 · 辉立 Phillip / POEMS
 # ============================================================
 
-HOST-SUFFIX,phillip.com.hk,proxy
-HOST-SUFFIX,poems.com.hk,proxy
+host-suffix,phillip.com.hk,proxy
+host-suffix,poems.com.hk,proxy
 
 # ============================================================
 # 2-13  香港本地券商 · 华盛 / 华盛通 Valuable Capital
 # ============================================================
 
-HOST-SUFFIX,valuable.com.hk,proxy
-HOST-SUFFIX,vcgroup.com.hk,proxy
+host-suffix,valuable.com.hk,proxy
+host-suffix,vcgroup.com.hk,proxy
 
 # ============================================================
 # 2-14  香港本地券商 · 盈立证券 uSmart
 # ============================================================
 
-HOST-SUFFIX,usmart.hk,proxy
-HOST-SUFFIX,usmartsecurities.com,proxy
+host-suffix,usmart.hk,proxy
+host-suffix,usmartsecurities.com,proxy
 
 # ============================================================
 # 2-15  香港本地券商 · 艾德金融 Eddid / 艾德一站通
 # ============================================================
 
-HOST-SUFFIX,eddid.com.hk,proxy
-HOST-SUFFIX,eddid.cn,proxy
-HOST-SUFFIX,eddidyzt.com,proxy
-HOST-SUFFIX,eddidesop.com,proxy
-HOST-KEYWORD,eddid,proxy
+host-suffix,eddid.com.hk,proxy
+host-suffix,eddid.cn,proxy
+host-suffix,eddidyzt.com,proxy
+host-suffix,eddidesop.com,proxy
+host-keyword,eddid,proxy
 
 # ============================================================
 # 2-16  香港本地券商 · 第一上海 First Shanghai
 # ============================================================
 
-HOST-SUFFIX,firstshanghai.com.hk,proxy
-HOST-SUFFIX,mystockhk.com,proxy
+host-suffix,firstshanghai.com.hk,proxy
+host-suffix,mystockhk.com,proxy
 
 # ============================================================
 # 2-17  香港本地券商 · 海通国际 Haitong International
 # ============================================================
 
-HOST-SUFFIX,htisec.com,proxy
-HOST-SUFFIX,htisec.net,proxy
-HOST-KEYWORD,htisec,proxy
+host-suffix,htisec.com,proxy
+host-suffix,htisec.net,proxy
+host-keyword,htisec,proxy
 
 # ============================================================
 # 2-18  香港本地券商 · 国泰君安国际 Guotai Junan International
 # ============================================================
 
-HOST-SUFFIX,gtjai.com,proxy
-HOST-KEYWORD,gtjai,proxy
+host-suffix,gtjai.com,proxy
+host-keyword,gtjai,proxy
 
 # ============================================================
 # 2-19  香港本地券商 · 中银国际证券 BOCI
@@ -498,51 +543,51 @@ HOST-KEYWORD,gtjai,proxy
 # 注意 HOST-SUFFIX,bocichina.com 不覆盖 bocichina.com.cn（后缀不以 .bocichina.com 结尾），
 # 故必须单独列出。
 
-HOST-SUFFIX,bocichina.com,proxy
-HOST-SUFFIX,bocichina.com.cn,proxy
-HOST-SUFFIX,bocichina.cn,proxy
-HOST-SUFFIX,boci.com.hk,proxy
+host-suffix,bocichina.com,proxy
+host-suffix,bocichina.com.cn,proxy
+host-suffix,bocichina.cn,proxy
+host-suffix,boci.com.hk,proxy
 
 # ============================================================
 # 2-20  香港本地券商 · 宝盛 Monex BOOM
 # ============================================================
 
-HOST-SUFFIX,monexboom.com,proxy
-HOST-SUFFIX,boom.com.hk,proxy
-HOST-KEYWORD,monexboom,proxy
+host-suffix,monexboom.com,proxy
+host-suffix,boom.com.hk,proxy
+host-keyword,monexboom,proxy
 
 # ============================================================
 # 2-21  香港本地券商 · 富邦证券（香港）Fubon
 # ============================================================
 
-HOST-SUFFIX,fubonsec.com.hk,proxy
+host-suffix,fubonsec.com.hk,proxy
 
 # ============================================================
 # 2-22  基金 / 财富管理平台 · FSMOne / Fundsupermart / iFAST
 # ============================================================
 
-HOST-SUFFIX,fsmone.com,proxy
-HOST-SUFFIX,fsmone.com.hk,proxy
-HOST-SUFFIX,fundsupermart.com,proxy
-HOST-SUFFIX,fundsupermart.com.hk,proxy
-HOST-SUFFIX,ifastfinancial.com,proxy
-HOST-SUFFIX,ifastcorp.com,proxy
-HOST-KEYWORD,fsmone,proxy
-HOST-KEYWORD,fundsupermart,proxy
-HOST-KEYWORD,ifast,proxy
+host-suffix,fsmone.com,proxy
+host-suffix,fsmone.com.hk,proxy
+host-suffix,fundsupermart.com,proxy
+host-suffix,fundsupermart.com.hk,proxy
+host-suffix,ifastfinancial.com,proxy
+host-suffix,ifastcorp.com,proxy
+host-keyword,fsmone,proxy
+host-keyword,fundsupermart,proxy
+host-keyword,ifast,proxy
 
 # ============================================================
 # 2-23  行情 / 数据服务 · 投资全速易 i-Invest / AAStocks / ETNet
 # ============================================================
 
-HOST-SUFFIX,i-invest.com.hk,proxy
-HOST-SUFFIX,aastocks.com,proxy
-HOST-SUFFIX,aastocks.com.hk,proxy
-HOST-SUFFIX,etnet.com.hk,proxy
-HOST-SUFFIX,etnet.com,proxy
-HOST-KEYWORD,i-invest,proxy
-HOST-KEYWORD,aastocks,proxy
-HOST-KEYWORD,etnet,proxy
+host-suffix,i-invest.com.hk,proxy
+host-suffix,aastocks.com,proxy
+host-suffix,aastocks.com.hk,proxy
+host-suffix,etnet.com.hk,proxy
+host-suffix,etnet.com,proxy
+host-keyword,i-invest,proxy
+host-keyword,aastocks,proxy
+host-keyword,etnet,proxy
 
 # ============================================================
 # 2-24  券商后端 IP 段（/32 精确主机，走 proxy）
@@ -553,26 +598,26 @@ HOST-KEYWORD,etnet,proxy
 # ⚠ 原 v1 另有 43 条 /23、/24 网段，已在 v2.0 全部删除 —— 理由见文件末尾。
 # ============================================================
 
-IP-CIDR,47.243.118.180/32,proxy,no-resolve
-IP-CIDR,47.243.107.98/32,proxy,no-resolve
-IP-CIDR,8.218.30.161/32,proxy,no-resolve
-IP-CIDR,18.166.204.203/32,proxy,no-resolve
-IP-CIDR,18.162.38.24/32,proxy,no-resolve
-IP-CIDR,18.163.254.94/32,proxy,no-resolve
-IP-CIDR,47.57.180.81/32,proxy,no-resolve
-IP-CIDR,34.226.76.162/32,proxy,no-resolve
-IP-CIDR,54.172.233.156/32,proxy,no-resolve
-IP-CIDR,43.152.182.46/32,proxy,no-resolve
-IP-CIDR,43.134.158.106/32,proxy,no-resolve
-IP-CIDR,43.132.138.6/32,proxy,no-resolve
-IP-CIDR,119.28.201.30/32,proxy,no-resolve
-IP-CIDR,49.51.77.113/32,proxy,no-resolve
-IP-CIDR,43.153.234.107/32,proxy,no-resolve
-IP-CIDR,43.153.249.33/32,proxy,no-resolve
-IP-CIDR,43.163.17.229/32,proxy,no-resolve
-IP-CIDR,43.132.106.6/32,proxy,no-resolve
-IP-CIDR,43.132.106.8/32,proxy,no-resolve
-IP-CIDR,43.132.138.67/32,proxy,no-resolve
+ip-cidr,47.243.118.180/32,proxy,no-resolve
+ip-cidr,47.243.107.98/32,proxy,no-resolve
+ip-cidr,8.218.30.161/32,proxy,no-resolve
+ip-cidr,18.166.204.203/32,proxy,no-resolve
+ip-cidr,18.162.38.24/32,proxy,no-resolve
+ip-cidr,18.163.254.94/32,proxy,no-resolve
+ip-cidr,47.57.180.81/32,proxy,no-resolve
+ip-cidr,34.226.76.162/32,proxy,no-resolve
+ip-cidr,54.172.233.156/32,proxy,no-resolve
+ip-cidr,43.152.182.46/32,proxy,no-resolve
+ip-cidr,43.134.158.106/32,proxy,no-resolve
+ip-cidr,43.132.138.6/32,proxy,no-resolve
+ip-cidr,119.28.201.30/32,proxy,no-resolve
+ip-cidr,49.51.77.113/32,proxy,no-resolve
+ip-cidr,43.153.234.107/32,proxy,no-resolve
+ip-cidr,43.153.249.33/32,proxy,no-resolve
+ip-cidr,43.163.17.229/32,proxy,no-resolve
+ip-cidr,43.132.106.6/32,proxy,no-resolve
+ip-cidr,43.132.106.8/32,proxy,no-resolve
+ip-cidr,43.132.138.67/32,proxy,no-resolve
 
 
 # ============================================================

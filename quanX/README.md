@@ -32,7 +32,7 @@
 
 | 文件 | 用途 | 内置策略 | 分流要点 | 更新 |
 | --- | --- | --- | --- | --- |
-| [HK_Finance.list](HK_Finance.list) | 港股 / 美股券商 + 香港银行金融分流 | `proxy` / `DIRECT` | 券商 → `proxy`；银行 / 支付 / 监管 / 致富证券 → `DIRECT` | 2026-09-29 |
+| [HK_Finance.list](HK_Finance.list) | 港股 / 美股券商 + 香港银行金融分流 | `proxy` / `direct` | 券商 → `proxy`；银行 / 支付 / 监管 / 致富证券 → `direct`（344 条） | 2026-09-29 |
 | [Apple_Push.list](Apple_Push.list) | Apple 推送（APNs）走代理，恢复海外 App 通知 | `proxy` | 全部 → `proxy`（12 条） | 2026-09-29 |
 | [Dola.list](Dola.list) | Dola / Cici（豆包海外版）分流 + 追踪拦截 | `proxy` / `REJECT` | 核心 → `proxy`（新加坡，10 条），追踪 → `REJECT`（4 条） | 2026-09-29 |
 
@@ -61,15 +61,15 @@ https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list
 >
 > **唯一例外 · 致富证券（Chief / 致富通）**：其 App 会主动检测 VPN 虚拟网卡接口，走 `proxy` 会导致「网络检测失败」或速度极慢，因此与银行同类**强制 `DIRECT`**，且放在文件最前面。
 
-**文件结构（2 部分 · 31 个分节，共 338 条：196 `proxy` / 142 `DIRECT`）**
+**文件结构（2 部分 · 31 个分节，共 344 条：196 `proxy` / 148 `direct`）**
 
 > 分节按「先直连、后代理」排列，与策略分布一致，便于审计。
 
-**第一部分 · `DIRECT`（142 条）**
+**第一部分 · `direct`（148 条）**
 
 | 分节 | 条数 | 覆盖 |
 | --- | --- | --- |
-| 1-1 致富证券 Chief | 31 | 致富 / 致富通 Chief、Megahub（App 自检 VPN 接口，**硬直连**） |
+| 1-1 致富证券 Chief | 37 | 致富 / 致富通 Chief、Megahub（App 自检 VPN 接口，**硬直连**）+ 6 条纯 IP 兜底 |
 | 1-2 香港虚拟银行 | 19 | ZA、Airstar 天星、WeLab 汇立、Mox、livi、PAOb、Fusion |
 | 1-3 蚂蚁银行 + AlipayHK | 16 | Ant Bank HK、AlipayHK |
 | 1-4 汇丰 / 恒生 | 23 | HSBC、Hang Seng |
@@ -368,6 +368,14 @@ rules:
 ## 📝 更新日志
 
 ### 2026-09-29
+
+**HK_Finance.list v2.2** —— 规则 338 → **344 条（148 `direct` / 196 `proxy`）**：
+
+- **语法规范化**：规则类型与策略名全部改为**小写**（`HOST-SUFFIX` → `host-suffix`、`DIRECT` → `direct`），与 QX 官方 `sample.conf` 一致。原因：本文件原先**混用「大写 `DIRECT` + 小写 `proxy`」**，而官方示例与使用者配置里的其余规则一律小写。虽然 QX 大概率不区分大小写，但同一文件两种写法本身就是隐患 —— 万一某个版本对大写不友好，受影响的是**全部 142 条 `direct` 规则**（银行 / 交易所 / 致富），且现象是**静默失效**，极难排查。
+- **新增「纯 IP 请求兜底」6 条**（1-1 节）：`ip-cidr,…,direct,no-resolve`。依据是 QX 官方 `sample.conf` 的明确注释 —— **「Pure IP requests won't be matched by the host related rules.」** 交易类 App 常把行情/交易服务器硬编码为 IP，这类请求不经过域名 → 所有 `host-*` 规则失效 → 落到 `final` → 走代理，后果与「整个 App 走 proxy」相同（**App 的 VPN 检测失败、速度极慢**，正是本文件要避免的）。
+  取值 = 2026-09-29 实测各致富域名（DoH，ECS = 中国大陆）的解析结果。
+  ⚠ **只用 `/32`、不用 `/24`**：已核实 `113.28.95.0/24` 是 PCCW 共享段（同段还有 K Line / Hakuto / AZ Electronic Materials 等公司），`59.152.220.0/24` 与 `59.152.222.0/24` 是 HKBNES 共享段 —— 写 `/24` 会把这些无关企业的流量一并变成直连。
+  ⚠ 局限：若 App 使用 IP 池或轮换 IP，本段只覆盖已观测地址；若确认 App 全程用域名访问，可整段删除。
 
 **HK_Finance.list v2.1** —— 全文件审计后重构，规则 451 → **338 条（142 `DIRECT` / 196 `proxy`）**：
 
