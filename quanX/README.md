@@ -29,7 +29,7 @@
 
 | 文件 | 用途 | 内置策略 | 分流要点 | 更新 |
 | --- | --- | --- | --- | --- |
-| [HK_Finance.list](HK_Finance.list) | 港股 / 美股券商 + 香港银行金融分流 | `proxy` / `DIRECT` | 券商 → `proxy`，银行 / 支付 / 监管 → `DIRECT` | 2026-06-16 |
+| [HK_Finance.list](HK_Finance.list) | 港股 / 美股券商 + 香港银行金融分流 | `proxy` / `DIRECT` | 券商 → `proxy`；银行 / 支付 / 监管 / 致富证券 → `DIRECT` | 2026-09-29 |
 | [Apple_Push.list](Apple_Push.list) | Apple 推送（APNs）走代理，恢复海外 App 通知 | `proxy` | 全部 → `proxy` | 2026-06-16 |
 | [Dola.list](Dola.list) | Dola / Cici（豆包海外版）分流 + 追踪拦截 | `proxy` / `REJECT` | 核心 → `proxy`（新加坡），追踪 → `REJECT` | 2026-06-16 |
 
@@ -52,24 +52,59 @@ https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list
 - 实测：大陆**直连**券商 App、行情、登录接口受阻，**挂海外节点（代理）可正常访问**。
 
 > ⟹ 规则原则：所有【券商交易 / 行情 / 登录 / 资金】流量一律走 `proxy`；银行 / 支付 / 监管官网走 `DIRECT`（不受此次整治影响，直连更稳更快）。
+>
+> **唯一例外 · 致富证券（Chief / 致富通）**：其 App 会主动检测 VPN 虚拟网卡接口，走 `proxy` 会导致「网络检测失败」或速度极慢，因此与银行同类**强制 `DIRECT`**，且放在文件最前面。
 
-**文件结构（8 大分节，共 350 条：249 `proxy` / 101 `DIRECT`）**
+**文件结构（2 部分 · 31 个分节，共 335 条：193 `proxy` / 142 `DIRECT`）**
 
-| 分节 | 策略 | 覆盖 |
+> 分节按「先直连、后代理」排列，与策略分布一致，便于审计。
+
+**第一部分 · `DIRECT`（142 条）**
+
+| 分节 | 条数 | 覆盖 |
 | --- | --- | --- |
-| 一、中资跨境互联网券商 | `proxy` | 富途 / Futubull / moomoo、老虎 / TradeUp、长桥 Longbridge / Longport、微牛 Webull |
-| 二、国际 / 美资券商 | `proxy` | 盈透 IBKR、嘉信 Schwab / TD、**Firstrade 第一证券**、SoFi、BBAE，及 Robinhood / Fidelity / E\*Trade / Vanguard / tastytrade / Merrill / Morgan Stanley |
-| 三、香港本地券商 | `proxy` | 致富 + Megahub、耀才、辉立 Phillip/POEMS、华盛、uSmart、**艾德 Eddid、第一上海、海通国际、国泰君安国际、中银国际、富邦** |
-| 四、基金 / 财富平台 | `proxy` | FSMOne / Fundsupermart / iFAST |
-| 五、行情 / 数据 | `proxy` | AAStocks、ETNet、Megahub、投资全速易 i-Invest |
-| 六、券商后端 IP 段 | `proxy` | 来自 Broker.list（2026-06-13）的 63 条 IP-CIDR（腾讯云港/新 + AWS，券商交易行情后端） |
-| 七、银行 / 虚拟银行 / 支付 | `DIRECT` | ZA、Airstar、WeLab、Mox、livi、PAOb、Fusion、蚂蚁银行 / AlipayHK、汇丰 / 恒生、中银香港、花旗、渣打、星展、交行、大新、东亚、信银国际、建行亚洲、永隆、大众、华侨、AEON、八达通、摩根大通 |
-| 八、交易所 / 监管 | `DIRECT` | HKEX、HKMA、SFC |
+| 1-1 致富证券 Chief | 31 | 致富 / 致富通 Chief、Megahub（App 自检 VPN 接口，**硬直连**） |
+| 1-2 香港虚拟银行 | 19 | ZA、Airstar 天星、WeLab 汇立、Mox、livi、PAOb、Fusion |
+| 1-3 蚂蚁银行 + AlipayHK | 16 | Ant Bank HK、AlipayHK |
+| 1-4 汇丰 / 恒生 | 23 | HSBC、Hang Seng |
+| 1-5 其他在港银行与支付 | 37 | 中银香港、花旗、渣打、星展、交行、大新、东亚、信银国际、建行亚洲、永隆、大众、华侨、AEON、八达通、摩根大通 |
+| 1-6 交易所 / 监管 | 5 | HKEX、HKMA、SFC |
+| 1-7 大陆 A 股行情源 | 11 | 券商用的大陆行情接口（多已被 `geoip, cn` 覆盖，此处显式声明） |
+
+**第二部分 · `proxy`（193 条）**
+
+| 分节 | 条数 | 覆盖 |
+| --- | --- | --- |
+| 2-1 富途 Futu / Futubull / moomoo | 45 | 受 6·12 影响最大，务必走 `proxy` |
+| 2-2 老虎 Tiger / 老虎国际 / TradeUp | 20 | |
+| 2-3 长桥 Longbridge / LongPort | 14 | |
+| 2-4 微牛 Webull | 5 | |
+| 2-5 盈透证券 IBKR | 12 | |
+| 2-6 嘉信 Schwab / TD Ameritrade | 12 | |
+| 2-7 Firstrade 第一证券 | 3 | |
+| 2-8 其他美资综合券商 | 12 | Robinhood / Fidelity / E\*Trade / Vanguard / tastytrade / Merrill / Morgan Stanley |
+| 2-9 SoFi | 3 | |
+| 2-10 BBAE 必贝 | 4 | |
+| 2-11 耀才 Bright Smart | 3 | |
+| 2-12 辉立 Phillip / POEMS | 2 | |
+| 2-13 华盛 Valuable Capital | 2 | |
+| 2-14 盈立 uSmart | 2 | |
+| 2-15 艾德金融 Eddid | 5 | |
+| 2-16 第一上海 First Shanghai | 2 | |
+| 2-17 海通国际 Haitong International | 3 | |
+| 2-18 国泰君安国际 GTJA International | 2 | |
+| 2-19 中银国际证券 BOCI | 1 | |
+| 2-20 宝盛 Monex BOOM | 3 | |
+| 2-21 富邦证券（香港）Fubon | 1 | |
+| 2-22 FSMOne / Fundsupermart / iFAST | 9 | |
+| 2-23 行情 / 数据服务 | 8 | AAStocks、ETNet、Megahub、投资全速易 i-Invest |
+| 2-24 券商后端 IP 段 | 20 | 仅 `/32` 精确主机（腾讯云港 / 新 + AWS） |
 
 **说明**
 
 - 文件内已混合写入 `DIRECT` / `proxy`，**不要**在 `[filter_remote]` 加 `force-policy`，否则会把银行的 `DIRECT` 一起覆盖。
-- 第六节 IP 段以腾讯云香港 / 新加坡通用网段为主，范围较宽；若发现无关腾讯云服务被误代理，可删除对应段。
+- 第 2-24 节只保留 **20 条 `/32` 精确主机**。v1 曾有 43 条 `/23`、`/24` 网段，v2.0 已全部删除 —— 其中 13 条是**腾讯云大陆段**，一旦被搬进 `[filter_local]` 会先于 `geoip, cn` 命中，把大陆 IP 整体劫持进代理。详见文件末尾「附录 A」。
+- 致富证券的 72 条显式子域规则已删除（被 `HOST-SUFFIX` 完整覆盖，QX 的 `HOST-SUFFIX` 匹配任意层级子域）；`HOST-KEYWORD` 兜底保留，因其匹配范围比后缀更宽、不是冗余。详见「附录 B」。
 - 行情 / 交易场景建议在 `proxy` 组内选择**低延迟香港或新加坡节点**。
 
 ---
@@ -208,7 +243,7 @@ Quantumult X — 在 `[filter_remote]` 中加入（**不要**加 `force-policy`�
 
 ```ini
 [filter_remote]
-https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list, tag=香港金融混合分流, update-interval=86400, opt-parser=false, enabled=true
+https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list, tag=港美股券商及香港银行, update-interval=86400, opt-parser=false, enabled=true
 https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Apple_Push.list, tag=Apple Push, update-interval=86400, opt-parser=false, enabled=true
 https://raw.githubusercontent.com/USCZ/Rule/main/quanX/Dola.list, tag=Dola Cici AI, update-interval=86400, opt-parser=false, enabled=true
 ```
@@ -244,6 +279,16 @@ rules:
 ---
 
 ## 📝 更新日志
+
+### 2026-09-29
+
+**HK_Finance.list v2.0** —— 全文件审计后重构，规则 451 → **335 条（142 `DIRECT` / 193 `proxy`）**：
+
+- **删除 43 条 `/23`、`/24` IP 网段**，只保留 20 条 `/32` 精确主机。被删段中 13 条是**腾讯云大陆段**（`1.14.242.0/23`、`42.193.128.0/24`、`106.55.66.0/23` 等）——作为远程条目时会被本地 `geoip, cn, direct` 先行命中，属纯负担；但一旦被搬进 `[filter_local]` 就会抢先命中、把大陆 IP 劫持进代理，公共规则集必须消除这个隐患。
+- **删除 73 条冗余 `HOST` 规则**：致富证券 72 条显式子域（`api.` / `cdn.` / `quote.` / `service.` / `toptrader.` …）全部被 `HOST-SUFFIX` 覆盖，另 1 条 `HOST,gator.uba.ap-southeast-1.volces.com`。
+- **修正误判**：`HOST-SUFFIX,octopus.com,DIRECT` → **`octopus.com.hk`**（`octopus.com` 是英国 Octopus Energy / Octopus Deploy；八达通卡官网是 `octopus.com.hk`）。
+- **补齐** `futu.hk`（`ibkr.com.hk` 上游已有，未重复添加）。
+- **分节重排为「先直连、后代理」**，编号 1-1…1-7 / 2-1…2-24，与策略分布一致；全文件按「同类型 + 同值」去重。
 
 ### 2026-06-16
 
