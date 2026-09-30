@@ -1,79 +1,81 @@
 # ============================================================
 # Quantumult X 规则集 · 港美股券商 + 香港金融（混合分流）
-# 文件：quanX/HK_Finance.list        版本：v2.2        更新：2026-09-29
+# 文件：quanX/HK_Finance.list        版本：v3.0        更新：2026-09-30
 # 仓库：https://github.com/USCZ/Rule
 # ------------------------------------------------------------
-# 【用途】
-#   港美股券商 / 行情平台                → proxy
-#   香港银行 / 虚拟银行 / 交易所 / 监管   → DIRECT
-#   致富证券 Chief（自检 VPN 接口）      → DIRECT
-#   券商用的大陆 A 股行情源              → DIRECT
+# 【用途】每一行都写好了 direct / proxy，直接加入 [filter_remote]：
+#   香港银行 / 虚拟银行 / 交易所 / 监管          → direct
+#   国际券商（IBKR / 嘉信 / Firstrade / 美资）   → direct
+#   香港本地券商（耀才 / 辉立 / 中银国际 …）      → direct
+#   基金平台 / 行情服务                          → direct
+#   受 2026 跨境整治影响的 6 家券商               → proxy
 #
-# 【用法】本文件每一行都已写好 DIRECT / proxy，直接加入 [filter_remote] 即可：
+# 【用法】
 #   https://raw.githubusercontent.com/USCZ/Rule/main/quanX/HK_Finance.list, tag=港美股券商及香港银行, update-interval=86400, opt-parser=false, enabled=true
 #
 # ⚠⚠ 不要给本文件加 force-policy ⚠⚠
 #   Quantumult X 的 force-policy 会【取代】资源内每一行的策略。
-#   本文件 DIRECT 与 proxy 混用，一旦加上，所有 DIRECT（香港银行 / 交易所 /
-#   致富证券）会被一起改成代理 —— 那正是本文件要避免的事。
+#   本文件 direct 与 proxy 混用，一旦加上，除 proxy 之外的全部 direct
+#   （香港银行 / 交易所 / 致富证券 / IBKR / 嘉信 …）会被一起改成代理 ——
+#   那正是本文件要避免的事。
 #   同理，Surge/Loon 的 RULE-SET、Clash 的 rule-providers 第三列（统一 outbound）
-#   也不能用于本文件；须展开到 [Rule] 并保留每行末尾的 proxy / DIRECT。
+#   也不能用于本文件；须展开到 [Rule] 并保留每行末尾的 proxy / direct。
 #
 # 【建议位置】[filter_remote] 第 1 组（修正规则类），放在各类合集之前。
-#   已核对：ConnersHua 的 Proxy.list / !CN.list / Direct.list / Direct+.list、
-#   Tracking.list、Pre.list、Apple.list 均不含本文件收录的任何域名，
-#   因此银行 / 交易所的 DIRECT 不会被更早的远程列表抢走。
 #
-# 【第一性原理（为什么券商要走代理）】
-#   · 2026-05-22 中国证监会对 富途控股 / 老虎证券 / 长桥证券 境内外主体立案调查。
-#   · 6/2 老虎、6/3 长桥、6/4 富途相继公告：自 2026-06-12 起暂停内地账户
-#     【买入 / 转入】，仅保留【卖出 + 出金】；八部门《方案》要求境外券商
-#     交易软件 / 服务器逐步关停。
-#   · 实测：大陆直连券商 App、行情、登录接口受阻；挂海外节点（代理）即可正常访问。
-#   ⟹ 券商【交易 / 行情 / 登录 / 资金】一律走 proxy；
-#      银行 / 支付 / 监管官网走 DIRECT（不受此次整治影响，直连更稳更快）。
+# ============================================================
+# 【v3.0 设计反转 —— 必读】
+# ------------------------------------------------------------
+# v2.0 ~ v2.2 的规则是「券商默认 proxy、银行 direct」，依据是 2026-05-22
+# 八部门《综合整治非法跨境证券期货基金经营活动实施方案》。
 #
-# 【v2.2 相对 v2.1 的修订】规则 338 → 344（新增 6 条纯 IP 兜底）
-#   1. 【语法规范化】规则类型与策略名全部改为小写（HOST-SUFFIX → host-suffix、
-#      DIRECT → direct），与 QX 官方 sample.conf 的写法一致。
-#      原因：本文件原先混用「大写 DIRECT + 小写 proxy」，而 QX 官方示例、
-#      以及使用者配置里的其余规则一律小写。虽然 QX 大概率不区分大小写，
-#      但「同一文件内两种写法」本身就是隐患 —— 万一某个版本对大写不友好，
-#      受影响的会是全部 142 条 direct 规则（银行 / 交易所 / 致富），
-#      而且现象是「静默失效」，极难排查。规范化后该风险归零。
-#   2. 【新增 1-1 节的纯 IP 请求兜底】6 条 ip-cidr /32 → direct。
-#      依据：QX 官方 sample.conf 明确注释「Pure IP requests won't be matched
-#      by the host related rules.」。交易 App 常硬编码 IP 连接行情/交易服务器，
-#      这类请求不经过域名 → 所有 host-* 规则失效 → 落到 final → 走代理，
-#      与「整个 App 走 proxy」后果相同（VPN 检测失败、变慢）。
-#      取值 = 2026-09-29 实测各致富域名的解析结果，用 /32 精确匹配（见 1-1 节注释）。
+# 实测反馈：那套规则把大量【本可直连】的券商（IBKR / 嘉信 / 香港本地券商）
+# 一并推去代理，后果有二 ——
+#   ① App 拿到代理出口 IP，自检判定为「代理环境」，弹「请关闭 VPN」；
+#   ② 绕路变慢。
+# 复核后发现：受整治影响的是【特定几家】，不是「券商」这个整体。
 #
-# 【v2.1 相对 v1 的修订】规则总数 451 → 338
-#   1. 删除原第六节的 43 条 /23、/24 网段，只保留 20 条 /32 精确主机。
-#      被删段中含腾讯云【大陆】段 —— 详见文件末尾「关于 IP 段」。
-#   2. 删除 73 条与 HOST-SUFFIX 完全重复的 HOST 显式规则
-#      （致富证券 72 条 + 1 条 uba 埋点）。详见「关于冗余 HOST」。
-#   3. 修正误判：HOST-SUFFIX,octopus.com → octopus.com.hk
-#      （octopus.com 是英国 Octopus Energy / Octopus Deploy；
-#        八达通卡官网是 octopus.com.hk）。
-#   4. 补齐：futu.hk（ibkr.com.hk 上游已有，未重复添加）。
-#   5. 补齐中银国际 BOCI 的 3 个遗漏域名（bocichina.com.cn / bocichina.cn /
-#      boci.com.hk，均经 DNS 与站点验证），见 2-19 节注释。
-#   6. 分节重排为「先直连、后代理」，与策略分布一致，便于审计。
-#   7. 全文件去重（同类型 + 同值）。
-#   最终：338 条 = 142 DIRECT + 196 proxy
+# 故 v3.0 反转为「默认直连」，判据只有一条：
+#   只有【有公开新闻 / 公告证明其限制内地账户】的券商才走 proxy，
+#   没有特别说明的一律 direct。
+#
+# 按此判据筛出的 6 家（详见第二部分各节依据）：
+#   富途 Futu / 老虎 Tiger / 长桥 Longbridge   ← 2026-05-22 方案点名
+#   微牛 Webull                                ← 2026 起清退内地存量账户
+#   华盛 Valuable Capital                      ← 2026-06-15 起限制内地存量账户
+#   国泰君安国际 GTJAI                         ← 2026-09-26 起限制内地存量账户
+#
+# 【为什么银行 / 交易所必须 direct】
+#   它们不受此次整治影响；且银行 App 会做风控自检，代理出口会触发
+#   「异地登录 / 检测到开启 VPN」。直连更快更稳。
+#   ⚠ 配套：使用者的 QX 配置须把本文件里的银行 / 券商域名加入
+#     [general] dns_exclusion_list（= Surge 的 always-real-ip），
+#     否则 App 会拿到 Fake IP（198.18.x.x）而误判网络环境。
+#
+# 【为什么致富证券要放最前面直连】
+#   致富 App 会检测 VPN 接口，走 proxy 会导致网络检测失败或速度极慢，
+#   且它会用【纯 IP】连行情 / 交易服务器（见 1-1 节注释）。
+#
+# ============================================================
+# 【版本历史】
+#   v3.0  2026-09-30  设计反转为「默认 direct」；proxy 收窄到受整治的 6 家；
+#                     新增 大象银行 EleBank（elebank.com）；1-1 保留 6 条致富纯 IP 兜底。
+#   v2.2  2026-09-29  语法规范化（全小写）+ 致富 6 条纯 IP 兜底（338 → 344 条）
+#   v2.1  2026-09-29  451 → 338 条：删 43 条 /23、/24 网段与 73 条冗余 HOST，
+#                     修正 octopus.com 误判，补 futu.hk / BOCI 域名，分节重排。
 # ============================================================
 
 
 # ############################################################
-# 第一部分 · DIRECT —— 直连
+# 第一部分 · direct —— 直连（默认）
 # ############################################################
 
 # ============================================================
-# 1-1  致富证券 Chief Securities / 致富通（硬直连）
+# 1-1  致富证券 Chief Securities / 致富通（硬直连 · 含纯 IP 兜底）
+# ============================================================
 # 致富 App 会检测 VPN 接口，走 proxy 会导致网络检测失败或速度极慢，
 # 因此与银行同类，放在文件最前面直连。
-# ============================================================
+
 # --- 主品牌域 + KEYWORD 兜底 ---
 
 host-suffix,chiefgroup.com.hk,direct
@@ -147,7 +149,7 @@ ip-cidr,175.45.6.4/32,direct,no-resolve
 
 
 # ============================================================
-# 1-2  香港虚拟银行 · ZA / Airstar 天星 / WeLab 汇立 / Mox / livi / PAOb / Fusion
+# 1-2  香港虚拟银行 · ZA 众安 / 天星·大象 EleBank / WeLab 汇立 / Mox / livi / PAOb / Fusion
 # ============================================================
 
 host-suffix,za.group,direct
@@ -160,6 +162,10 @@ host-keyword,zaintl,direct
 host-suffix,airstarbank.com,direct
 host-suffix,airstarbank.com.hk,direct
 host-keyword,airstar,direct
+# 天星银行已于 2025 年改名【大象银行 EleBank】，主域 elebank.com（腾讯云香港）。
+host-suffix,elebank.com,direct
+host-suffix,elebank.com.hk,direct
+host-keyword,elebank,direct
 host-suffix,welab.co,direct
 host-suffix,welab.bank,direct
 host-suffix,welab.com,direct
@@ -169,6 +175,7 @@ host-suffix,welabgroup.com.hk,direct
 host-suffix,welab-bank.com,direct
 host-suffix,welab-bank.com.hk,direct
 host-keyword,welab,direct
+
 
 # ============================================================
 # 1-3  香港虚拟银行 · 蚂蚁银行 Ant Bank HK + AlipayHK
@@ -190,6 +197,7 @@ host-suffix,fusionbanking.com,direct
 host-keyword,moxbank,direct
 host-keyword,paob,direct
 host-keyword,fusionbank,direct
+
 
 # ============================================================
 # 1-4  香港传统银行 · 汇丰 HSBC / 恒生 Hang Seng
@@ -218,6 +226,7 @@ host-suffix,hangseng.com,direct
 host-suffix,hangseng.com.hk,direct
 host-keyword,hsbc,direct
 host-keyword,hangseng,direct
+
 
 # ============================================================
 # 1-5  其他香港 / 在港银行与支付
@@ -261,6 +270,7 @@ host-keyword,hkbea,direct
 host-keyword,cncbinternational,direct
 host-keyword,cmbwinglung,direct
 
+
 # ============================================================
 # 1-6  交易所 / 监管公开站点
 # ============================================================
@@ -270,6 +280,7 @@ host-suffix,hkexnews.hk,direct
 host-suffix,hkma.gov.hk,direct
 host-suffix,sfc.hk,direct
 host-keyword,hkex,direct
+
 
 # ============================================================
 # 1-7  券商用的大陆 A 股行情源（多已被 geoip, cn 覆盖，此处显式声明）
@@ -294,8 +305,161 @@ host-suffix,hexin.com,direct
 
 
 # ============================================================
-# 2-1  中资跨境互联网券商 · 富途 Futu / Futubull / moomoo  （受 6·12 影响最大，务必走 proxy）
+# 1-8  国际券商 · IBKR 盈透 / 嘉信 Schwab / Firstrade / 其他美资 / SoFi / BBAE
 # ============================================================
+# 判据：美资券商不受 2026 跨境整治影响，直连即可。
+#
+# ⚠ IBKR 实测备注（2026-09-30）：
+#   · ibkr.com / ibkr.com.hk 解析正常（64.190.196.59 / 23.35.148.x），直连可用；
+#     网页端 brokerage.ibkr.com 亦在 ibkr.com 域下 —— 这是 IBKR 现行主域。
+#   · interactivebrokers.com 属【旧域】：大陆 DNS 被污染 —— 实测阿里 223.5.5.5、
+#     腾讯 119.29.29.29、114.114.114.114、乃至腾讯加密 DNS doh.pub 全部返回
+#     Dropbox(108.160.x) / Twitter(104.244.x) / Facebook(69.63.x / 157.240.x) 段 IP。
+#     但用真实 Akamai IP（23.39.47.41）强制 SNI 直连可成功（HTTP 200）—— 说明
+#     只是 DNS 污染，并非 SNI 阻断。
+#     ⇒ 若你的 IBKR 客户端确实会访问该旧域且连不上，把下面那一行改回 proxy 即可。
+
+host-suffix,interactivebrokers.com,direct
+host-suffix,interactivebrokers.com.hk,direct
+host-suffix,interactivebrokers.co.uk,direct
+host-suffix,ibkr.com,direct
+host-suffix,ibkr.com.cn,direct
+host-suffix,ibkr.com.hk,direct
+host-suffix,ibkr.info,direct
+host-suffix,ibkrguides.com,direct
+host-suffix,ibllc.com,direct
+host-keyword,interactivebrokers,direct
+host-keyword,ibkr,direct
+host-keyword,ibllc,direct
+
+host-suffix,schwab.com,direct
+host-suffix,schwab.com.cn,direct
+host-suffix,schwab.com.hk,direct
+host-suffix,schwab.co.uk,direct
+host-suffix,schwabcdn.com,direct
+host-suffix,schwabplan.com,direct
+host-suffix,schwabassetmanagement.com,direct
+host-suffix,tdameritrade.com,direct
+host-suffix,thinkorswim.com,direct
+host-keyword,schwab,direct
+host-keyword,tdameritrade,direct
+host-keyword,thinkorswim,direct
+
+host-suffix,firstrade.com,direct
+host-suffix,firstrade-chinese.com,direct
+host-keyword,firstrade,direct
+
+host-suffix,robinhood.com,direct
+host-suffix,fidelity.com,direct
+host-suffix,fidelity.com.hk,direct
+host-suffix,etrade.com,direct
+host-suffix,vanguard.com,direct
+host-suffix,tastytrade.com,direct
+host-suffix,tastyworks.com,direct
+host-suffix,merrilledge.com,direct
+host-suffix,ml.com,direct
+host-suffix,morganstanley.com,direct
+host-keyword,robinhood,direct
+host-keyword,tastytrade,direct
+
+host-suffix,sofi.com,direct
+host-suffix,sofi.hk,direct
+host-suffix,sofi.com.hk,direct
+
+host-suffix,bbae.com,direct
+host-suffix,bbae.com.hk,direct
+host-suffix,bbae.net,direct
+host-keyword,bbae,direct
+
+
+# ============================================================
+# 1-9  香港本地券商 · 耀才 / 辉立 / 盈立 / 艾德 / 第一上海 / 海通国际 / 中银国际 / 宝盛 / 富邦
+# ============================================================
+# 判据：香港本地券商（含中资在港子公司中未受点名的）没有限制内地账户的公开公告
+#       → 直连。若日后某家发布限制公告，把它整节移入第二部分即可。
+# 注：华盛 Valuable Capital 与国泰君安国际 GTJAI 因已限制内地账户，
+#     不在本节，已移入第二部分（2-5 / 2-6）。
+
+host-suffix,brightsmart.com.hk,direct
+host-suffix,bsgroup.com.hk,direct
+host-keyword,brightsmart,direct
+
+host-suffix,phillip.com.hk,direct
+host-suffix,poems.com.hk,direct
+
+host-suffix,usmart.hk,direct
+host-suffix,usmartsecurities.com,direct
+
+host-suffix,eddid.com.hk,direct
+host-suffix,eddid.cn,direct
+host-suffix,eddidyzt.com,direct
+host-suffix,eddidesop.com,direct
+host-keyword,eddid,direct
+
+host-suffix,firstshanghai.com.hk,direct
+host-suffix,mystockhk.com,direct
+
+host-suffix,htisec.com,direct
+host-suffix,htisec.net,direct
+host-keyword,htisec,direct
+
+# bocichina.com.cn 经 DNS 验证为 bocichina.com 的 CNAME 别名（同一实体）；
+# bocichina.cn 有 NS/SOA 与 SPF（腾讯企业邮），同属中银国际证券；
+# boci.com.hk 为母公司中银国际控股（www.boci.com.hk 返回 200）。
+# 注意 HOST-SUFFIX,bocichina.com 不覆盖 bocichina.com.cn（后缀不以 .bocichina.com 结尾），
+# 故必须单独列出。
+
+host-suffix,bocichina.com,direct
+host-suffix,bocichina.com.cn,direct
+host-suffix,bocichina.cn,direct
+host-suffix,boci.com.hk,direct
+
+host-suffix,monexboom.com,direct
+host-suffix,boom.com.hk,direct
+host-keyword,monexboom,direct
+
+host-suffix,fubonsec.com.hk,direct
+
+
+# ============================================================
+# 1-10  基金 / 财富管理平台 · FSMOne / Fundsupermart / iFAST
+# ============================================================
+
+host-suffix,fsmone.com,direct
+host-suffix,fsmone.com.hk,direct
+host-suffix,fundsupermart.com,direct
+host-suffix,fundsupermart.com.hk,direct
+host-suffix,ifastfinancial.com,direct
+host-suffix,ifastcorp.com,direct
+host-keyword,fsmone,direct
+host-keyword,fundsupermart,direct
+host-keyword,ifast,direct
+
+
+# ============================================================
+# 1-11  行情 / 数据服务 · 投资全速易 i-Invest / AAStocks / ETNet
+# ============================================================
+
+host-suffix,i-invest.com.hk,direct
+host-suffix,aastocks.com,direct
+host-suffix,aastocks.com.hk,direct
+host-suffix,etnet.com.hk,direct
+host-suffix,etnet.com,direct
+host-keyword,i-invest,direct
+host-keyword,aastocks,direct
+host-keyword,etnet,direct
+
+
+# ############################################################
+# 第二部分 · proxy —— 代理
+# 仅收 2026 跨境整治明确点名的 6 家券商，逐家列出依据。
+# ############################################################
+
+# ============================================================
+# 2-1  富途 Futu / Futubull / moomoo
+# ============================================================
+# 依据：2026-05-22 八部门《综合整治非法跨境证券期货基金经营活动实施方案》点名立案；
+#      6/4 公告自 2026-06-12 起暂停内地账户【买入 / 转入】，仅保留【卖出 + 出金】。
 
 host-suffix,futu.com,proxy
 host-suffix,futu.cn,proxy
@@ -343,9 +507,11 @@ host-keyword,futuholdings,proxy
 host-keyword,moomoo,proxy
 host-suffix,futu.hk,proxy
 
+
 # ============================================================
-# 2-2  中资跨境互联网券商 · 老虎证券 Tiger / 老虎国际 / TradeUp
+# 2-2  老虎证券 Tiger / 老虎国际 / TradeUp
 # ============================================================
+# 依据：2026-05-22 方案点名；6/2 公告自 2026-06-12 起限制内地账户。
 
 host-suffix,itiger.com,proxy
 host-suffix,itigerup.com,proxy
@@ -368,9 +534,11 @@ host-keyword,laohu8,proxy
 host-keyword,xiaohu8,proxy
 host-keyword,zhijianfengyi,proxy
 
+
 # ============================================================
-# 2-3  中资跨境互联网券商 · 长桥 Longbridge / LongPort
+# 2-3  长桥证券 Longbridge / LongPort
 # ============================================================
+# 依据：2026-05-22 方案点名；6/3 公告自 2026-06-12 起限制内地账户。
 
 host-suffix,longbridge.com,proxy
 host-suffix,longbridge.cn,proxy
@@ -387,9 +555,12 @@ host-suffix,lbctrl.com,proxy
 host-keyword,longbridge,proxy
 host-keyword,longport,proxy
 
+
 # ============================================================
-# 2-4  中资跨境互联网券商 · 微牛 Webull
+# 2-4  微牛 Webull
 # ============================================================
+# 依据：2025-09 起停止接受中国大陆新开户；2026 起清退内地存量账户。
+#      （未在 2026-05-22 方案中点名，但有公开的清退新闻。）
 
 host-suffix,webull.com,proxy
 host-suffix,webull.hk,proxy
@@ -397,206 +568,37 @@ host-suffix,webull.com.hk,proxy
 host-suffix,wbrks.com,proxy
 host-keyword,webull,proxy
 
-# ============================================================
-# 2-5  国际券商 · 盈透证券 IBKR
-# ============================================================
-
-host-suffix,interactivebrokers.com,proxy
-host-suffix,interactivebrokers.com.hk,proxy
-host-suffix,interactivebrokers.co.uk,proxy
-host-suffix,ibkr.com,proxy
-host-suffix,ibkr.com.cn,proxy
-host-suffix,ibkr.com.hk,proxy
-host-suffix,ibkr.info,proxy
-host-suffix,ibkrguides.com,proxy
-host-suffix,ibllc.com,proxy
-host-keyword,interactivebrokers,proxy
-host-keyword,ibkr,proxy
-host-keyword,ibllc,proxy
 
 # ============================================================
-# 2-6  国际券商 · 嘉信理财 Charles Schwab / TD Ameritrade
+# 2-5  华盛 / 华盛通 Valuable Capital（原 1-9 节移入）
 # ============================================================
-
-host-suffix,schwab.com,proxy
-host-suffix,schwab.com.cn,proxy
-host-suffix,schwab.com.hk,proxy
-host-suffix,schwab.co.uk,proxy
-host-suffix,schwabcdn.com,proxy
-host-suffix,schwabplan.com,proxy
-host-suffix,schwabassetmanagement.com,proxy
-host-suffix,tdameritrade.com,proxy
-host-suffix,thinkorswim.com,proxy
-host-keyword,schwab,proxy
-host-keyword,tdameritrade,proxy
-host-keyword,thinkorswim,proxy
-
-# ============================================================
-# 2-7  国际券商 · Firstrade 第一证券
-# ============================================================
-
-host-suffix,firstrade.com,proxy
-host-suffix,firstrade-chinese.com,proxy
-host-keyword,firstrade,proxy
-
-# ============================================================
-# 2-8  其他美资综合券商（不用可整块删除）
-# ============================================================
-
-host-suffix,robinhood.com,proxy
-host-suffix,fidelity.com,proxy
-host-suffix,fidelity.com.hk,proxy
-host-suffix,etrade.com,proxy
-host-suffix,vanguard.com,proxy
-host-suffix,tastytrade.com,proxy
-host-suffix,tastyworks.com,proxy
-host-suffix,merrilledge.com,proxy
-host-suffix,ml.com,proxy
-host-suffix,morganstanley.com,proxy
-host-keyword,robinhood,proxy
-host-keyword,tastytrade,proxy
-
-# ============================================================
-# 2-9  SoFi
-# ============================================================
-
-host-suffix,sofi.com,proxy
-host-suffix,sofi.hk,proxy
-host-suffix,sofi.com.hk,proxy
-
-# ============================================================
-# 2-10  BBAE 必贝（复星系，美股）
-# ============================================================
-
-host-suffix,bbae.com,proxy
-host-suffix,bbae.com.hk,proxy
-host-suffix,bbae.net,proxy
-host-keyword,bbae,proxy
-
-# ============================================================
-# 2-11  香港本地券商 · 耀才 Bright Smart
-# ============================================================
-
-host-suffix,brightsmart.com.hk,proxy
-host-suffix,bsgroup.com.hk,proxy
-host-keyword,brightsmart,proxy
-
-# ============================================================
-# 2-12  香港本地券商 · 辉立 Phillip / POEMS
-# ============================================================
-
-host-suffix,phillip.com.hk,proxy
-host-suffix,poems.com.hk,proxy
-
-# ============================================================
-# 2-13  香港本地券商 · 华盛 / 华盛通 Valuable Capital
-# ============================================================
+# 依据：2026-06-06 通知客户，自 2026-06-15 起对内地存量投资者账户作服务调整。
+#      媒体报道其与富途 / 老虎 / 长桥同批（「富途、老虎、长桥及华盛证券等跨境券商」）。
 
 host-suffix,valuable.com.hk,proxy
 host-suffix,vcgroup.com.hk,proxy
 
-# ============================================================
-# 2-14  香港本地券商 · 盈立证券 uSmart
-# ============================================================
-
-host-suffix,usmart.hk,proxy
-host-suffix,usmartsecurities.com,proxy
 
 # ============================================================
-# 2-15  香港本地券商 · 艾德金融 Eddid / 艾德一站通
+# 2-6  国泰君安国际 GTJAI（原 1-9 节移入）
 # ============================================================
-
-host-suffix,eddid.com.hk,proxy
-host-suffix,eddid.cn,proxy
-host-suffix,eddidyzt.com,proxy
-host-suffix,eddidesop.com,proxy
-host-keyword,eddid,proxy
-
-# ============================================================
-# 2-16  香港本地券商 · 第一上海 First Shanghai
-# ============================================================
-
-host-suffix,firstshanghai.com.hk,proxy
-host-suffix,mystockhk.com,proxy
-
-# ============================================================
-# 2-17  香港本地券商 · 海通国际 Haitong International
-# ============================================================
-
-host-suffix,htisec.com,proxy
-host-suffix,htisec.net,proxy
-host-keyword,htisec,proxy
-
-# ============================================================
-# 2-18  香港本地券商 · 国泰君安国际 Guotai Junan International
-# ============================================================
+# 依据：2026-09-26 起对内地存量投资者账户限制入金与买入，仅保留卖出与出金。
+#      为首家被曝调整内地存量业务的中资在港券商（2026-09-28 第一财经报道）。
 
 host-suffix,gtjai.com,proxy
 host-keyword,gtjai,proxy
 
-# ============================================================
-# 2-19  香港本地券商 · 中银国际证券 BOCI
-# ============================================================
-# bocichina.com.cn 经 DNS 验证为 bocichina.com 的 CNAME 别名（同一实体）；
-# bocichina.cn 有 NS/SOA 与 SPF（腾讯企业邮），同属中银国际证券；
-# boci.com.hk 为母公司中银国际控股（www.boci.com.hk 返回 200）。
-# 注意 HOST-SUFFIX,bocichina.com 不覆盖 bocichina.com.cn（后缀不以 .bocichina.com 结尾），
-# 故必须单独列出。
-
-host-suffix,bocichina.com,proxy
-host-suffix,bocichina.com.cn,proxy
-host-suffix,bocichina.cn,proxy
-host-suffix,boci.com.hk,proxy
 
 # ============================================================
-# 2-20  香港本地券商 · 宝盛 Monex BOOM
+# 2-7  券商后端 IP 段（/32 精确主机，走 proxy）
 # ============================================================
 
-host-suffix,monexboom.com,proxy
-host-suffix,boom.com.hk,proxy
-host-keyword,monexboom,proxy
-
-# ============================================================
-# 2-21  香港本地券商 · 富邦证券（香港）Fubon
-# ============================================================
-
-host-suffix,fubonsec.com.hk,proxy
-
-# ============================================================
-# 2-22  基金 / 财富管理平台 · FSMOne / Fundsupermart / iFAST
-# ============================================================
-
-host-suffix,fsmone.com,proxy
-host-suffix,fsmone.com.hk,proxy
-host-suffix,fundsupermart.com,proxy
-host-suffix,fundsupermart.com.hk,proxy
-host-suffix,ifastfinancial.com,proxy
-host-suffix,ifastcorp.com,proxy
-host-keyword,fsmone,proxy
-host-keyword,fundsupermart,proxy
-host-keyword,ifast,proxy
-
-# ============================================================
-# 2-23  行情 / 数据服务 · 投资全速易 i-Invest / AAStocks / ETNet
-# ============================================================
-
-host-suffix,i-invest.com.hk,proxy
-host-suffix,aastocks.com,proxy
-host-suffix,aastocks.com.hk,proxy
-host-suffix,etnet.com.hk,proxy
-host-suffix,etnet.com,proxy
-host-keyword,i-invest,proxy
-host-keyword,aastocks,proxy
-host-keyword,etnet,proxy
-
-# ============================================================
-# 2-24  券商后端 IP 段（/32 精确主机，走 proxy）
-# ------------------------------------------------------------
-# 来源：Broker.list（Allen2023/broker-rules，2026-06-13）
-# 用途：券商 App 有时会绕过域名、直接以硬编码 IP 连接交易 / 行情后端。
-# 本文件只保留 /32 精确主机（单台后端），共 20 条。
-# ⚠ 原 v1 另有 43 条 /23、/24 网段，已在 v2.0 全部删除 —— 理由见文件末尾。
-# ============================================================
+# ⚠ 归属存疑：这 20 个 IP 全部落在【共享云网段】（阿里云香港 / AWS 香港·美东 /
+#   腾讯云香港·新加坡）。已逐一反查，无法归属到任何一家具体券商。
+#   保留为 proxy 的依据：中资跨境券商（富途 / 老虎 / 长桥 / 华盛）的后端
+#   正是部署在这些云上，而它们是需要代理的那一批。
+#   ⚠ 若你实测某个【本应直连】的券商走了代理，请先怀疑本段 —— 把对应 IP 删掉
+#     或移入第一部分即可。整段删除不影响其它规则。
 
 ip-cidr,47.243.118.180/32,proxy,no-resolve
 ip-cidr,47.243.107.98/32,proxy,no-resolve
@@ -658,4 +660,5 @@ ip-cidr,43.132.138.67/32,proxy,no-resolve
 # 注意：HOST-KEYWORD 兜底（chiefgroup / chieftrade / zft2000 …）保留，
 #       因为关键词匹配范围比后缀更宽，不是冗余。
 # ============================================================
+
 
